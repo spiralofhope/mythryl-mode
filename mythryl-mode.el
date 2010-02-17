@@ -90,9 +90,14 @@ Example: pkg1::pkg2::"
   "Face used for structure characters in mythryl."
   :group 'mythryl)
 
-(defconst mythryl-comment-regexp
-  "\\(#\\($\\|[ #!]\\).*\\|/[*]\\([^*]\\|\\*[^/]\\)*[*]/\\)"
+(defconst mythryl-comment-line-regexp
+  ;;"#\\(\n\\|\\($\\|[ #!]\\).*\\)"
+  "#\\($\\|[ #!]\\).*"
   )
+
+(defconst mythryl-comment-regexp
+  ;; "\\(#\\($\\|[ #!]\\).*\\|/[*]\\([^*]\\|\\*[^/]\\)*[*]/\\)" ;; appears to be buggy
+  (concat "\\(" mythryl-comment-line-regexp "\\|/[*]+\\([^*/]+/*[*]*\\)*[*]/\\)"))
 ;; (re-search-forward mythryl-comment-regexp) /* blue */
 
 (defconst mythryl-string-regexp "\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"")
@@ -102,6 +107,8 @@ Example: pkg1::pkg2::"
   (concat "\\(" mythryl-comment-regexp
 	  "\\|" mythryl-string-regexp
 	  "\\)"))
+
+(defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -140,9 +147,20 @@ This is a good place to put your preferred key bindings.")
 		 (while
 		     (and
 		      (backward-to-indentation 1)
-		      (not (or (looking-at "\\w") (looking-at "=")))
+		      (looking-at "=$")
+		      ;; (not (looking-at
+		      ;; 	    ;; skip lines which do not affect
+		      ;; 	    ;; indentation
+		      ;; 	    (eval-when-compile
+		      ;; 	      (concat
+		      ;; 	       "\\(\\("
+		      ;; 	       mythryl-op-regexp "+"
+		      ;; 	       "\\)[ \t]*\\)+"
+		      ;; 	       mythryl-comment-line-regexp
+		      ;; 	       ))))
 		      (or (not p) (< (point) p))
 		      )
+		   ;;(recursive-edit)
 		   (setq p (point))))
 	       (mythryl-skip-closing)
 	       (cons (current-indentation)
@@ -239,6 +257,7 @@ This is a good place to put your preferred key bindings.")
 				 "Unexpected char while scanning: "
 				 (string p))))
 			    )))
+		;; (princ 1) (recursive-edit)
 		(goto-char mae))))
 	  (goto-char (point-max)) (widen)
 	  (setq b (car b))
@@ -255,12 +274,26 @@ This is a good place to put your preferred key bindings.")
 	    (indent-to i)
 	    (setq mp (point)))))
     (if (and mp (< (point) mp)) (goto-char mp)))))
-		  
+
+(defun mythryl-electric-key (arg)
+  "Insert a key (\\{self-insert-command}) and indent line."
+  (interactive "P*")
+  (self-insert-command (prefix-numeric-value arg))
+  (apply indent-line-function ()))
+
+
+;; (defvar mythryl-mode-map nil
+;;   "Keymap used for \\{mythryl-mode}")
+;; (if mythryl-mode-map nil
+;;   (setq mythryl-mode-map (copy-keymap 'fundamental-mode-map))
+;;   )
 
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
   "Major mode for the Mythryl programming language."
   :group 'mythryl
+  ;; :abbrev-table (let ((a (make-abbrev-table)))
+  (define-key mythryl-mode-map ";" 'mythryl-electric-key)
   (set (make-local-variable 'indent-line-function) 'mythryl-indent-line)
   (set (make-local-variable 'comment-start) "# ")
   (make-local-variable 'font-lock-defaults)
@@ -269,6 +302,7 @@ This is a good place to put your preferred key bindings.")
  
  ;; KEYWORDS
 (list
+ (list mythryl-comment-regexp 0 font-lock-comment-face)
  (list
   (eval-when-compile
     (concat "\\(#[0-9]+\\|"
@@ -280,6 +314,7 @@ This is a good place to put your preferred key bindings.")
  (list
   (eval-when-compile
     (regexp-opt
+     ;; Maybe add: before, &&, ||
      (list "abstype" "also" "and" "api" "as" "case" "class" "elif"
 	   "else" "end" "eqtype" "esac" "except" "exception" "fi"
 	   "field" "fn" "for" "fprintf" "fun" "generic" "generic_api"
@@ -292,13 +327,9 @@ This is a good place to put your preferred key bindings.")
  (list "\\<\\(#?[a-z][a-z'_0-9]*\\|([\\!%&$+/:<=>?@~|*^-]+)\\)\\>" 0 font-lock-variable-name-face)
  (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>" 0 font-lock-type-face)
  (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>" 0 font-lock-constant-face)
- (list "[\\!%&$+/:<=>?@~|*^-]+" 0 mythryl-mode-op-face)
+ (list (eval-when-compile (concat mythryl-op-regexp "+")) 0 mythryl-mode-op-face)
  (list "[][(){};,.]+" 0 mythryl-mode-structure-face)
  (list mythryl-string-regexp 0 font-lock-string-face)
-
- ;; not caught by the syntax-table
- ;; FIXME: should use font-lock-syntactic-keywords
- (list "#\n" 0 font-lock-comment-face) 
  )
 ;; KEYWORDS-ONLY
 nil
@@ -307,26 +338,25 @@ nil
 ;; SYNTAX-ALIST
 '(
   (?\# . "w 12")
-  ;;(?\# . ". 12")
   (?\! . ". 2")
-(" " . "  2")
-(?\n . ">")
-(?\/ . ". 14b")
-(?\* . ". 23b")
-(?\( . "()")
-(?\{ . "(}")
-(?\[ . "(]")
-("$:=&@\\^-.%+?>~" . ".")
-(?\' . "w")
-(?_ . "w")
-(?\" . "\"")
-(?\\ . "\\")
-)
-; SYNTAX-BEGIN
+  (" \t" . "- 2")
+  (?\n . ">")
+  ;; (?\/ . ". 14b")
+  ;; (?\* . ". 23b")
+  (?\( . "()")
+  (?\{ . "(}")
+  (?\[ . "(]")
+  ("$:=&@\\^-.%+?>~/*" . ".")
+  (?\' . "w")
+  (?_ . "w")
+  (?\" . "\"")
+  (?\\ . "\\")
+  )
+;; SYNTAX-BEGIN
 nil
-; OTHER-VARS
+;; OTHER-VARS
 )))
-  ;(make-local-variable 'font-lock-syntax-table)
-  ;(setq font-lock-syntax-table mythryl-syntax-table))
+;;(make-local-variable 'font-lock-syntax-table)
+;;(setq font-lock-syntax-table mythryl-syntax-table))
 
 (provide 'mythryl-mode)
