@@ -1,4 +1,4 @@
-;;; mythryl-mode.el --- Major mode for editing Mythryl code
+;;; mythryl.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010 Michele Bini <rev.22@hotmail.com>
@@ -7,20 +7,20 @@
 ;; http://www.iro.umontreal.ca/~monnier/elisp/
 ;;
  
-;; Mythryl-mode is not part of emacs.
+;; mythryl.el is not part of emacs.
  
-;; Mythryl-mode is free software; you can redistribute it and/or modify
+;; "mythryl.el" is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
  
-;; Mythryl-mode is distributed in the hope that it will be useful,
+;; "mythryl.el" is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;; GNU General Public License for more details.
  
 ;; You should have received a copy of the GNU General Public License
-;; along with mythryl-mode; see the file COPYING. If not, write to the
+;; along with "mythryl.el"; see the file COPYING. If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
  
@@ -53,14 +53,58 @@
 ;;       (append '(("mythryl" . mythryl-mode))
 ;;               interpreter-mode-alist))
 
-;; This revision of mythryl-mode was released on 11 Feb 2010 by Michele
-;; Bini and includes simple indentation support.
+;; Indentation support:
+
+;; The current indentation engine is rather unsophisticated and only
+;; look at the previous line of code to determine the amount to indent
+;; the current line to.
+
+;; * TODO
+
+;; Nice ideas for mythryl-mode.el:
+;; + mythryl-interaction-mode
+;; + support of outline
+;; + support more indentation styles
+;; + command (possibly tied to "electric keys")
+
+;; * Changelog:
+
+;; Added comment-start-skip, makes 'uncomment-region' possible.
+;; -- Michele Bini, 2010-02-18
+;; * Added run-mythryl
+;; -- Michele Bini, 2010-02-21
+;; Added configurable indent levels.
+;; -- Michele Bini, 2010-02-21
+
+;; TODO
+;; fix: ~/src/mythryl/mythryl-7.110.58/src/lib/src/random.api
 
 ;;; Code:
  
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
 
+(defvar mythryl-mode-syntax-table
+  (let ((st (make-syntax-table)))
+    (modify-syntax-entry ?\# "< b" st)
+    ;(modify-syntax-entry ?\! ". 2b" st)
+    ;(modify-syntax-entry ?\  "- 2b" st)
+    ;(modify-syntax-entry ?\t "- 2b" st)
+    (modify-syntax-entry ?\n "> b" st)
+    (modify-syntax-entry ?\/ ". 14" st)
+    (modify-syntax-entry ?\* ". 23" st)
+    (modify-syntax-entry ?\( "()" st)
+    (modify-syntax-entry ?\{ "(}" st)
+    (modify-syntax-entry ?\[ "(]" st)
+    ;; (modify-syntax-entry "$:=&@^-.%+?>~" "." st)
+    (modify-syntax-entry ?\' "w" st)
+    (modify-syntax-entry ?_ "w" st)
+    (modify-syntax-entry ?\" "\"" st)
+    (modify-syntax-entry ?\\ "\\" st)
+    st)
+  "Syntax table in use in mythryl-mode buffers.")
+
+;; http://mythryl.org/my-Non-alphabetic_identifiers.html
 (defvar mythryl-mode-op-face 'mythryl-mode-op-face)
 (defface  mythryl-mode-op-face
   '((((class color) (background light)) (:foreground "blue"))
@@ -90,6 +134,16 @@ Example: pkg1::pkg2::"
   "Face used for structure characters in mythryl."
   :group 'mythryl)
 
+(defvar mythryl-mode-underscore-face 'mythryl-mode-underscore-face)
+(defface  mythryl-mode-underscore-face
+  '(;;(((class color) (background light)) (:foreground "black"))
+    ;;(((class color) (background dark))  (:foreground "white"))
+    ;;(((class grayscale))                (:foreground "white"))
+    (t                                  (:weight bold :inherit font-lock-constant-face)))
+  "Face used for the underscore wildcard.
+This is a bold character by default."
+  :group 'mythryl)
+
 (defconst mythryl-comment-line-regexp
   ;;"#\\(\n\\|\\($\\|[ #!]\\).*\\)"
   "#\\($\\|[ #!]\\).*"
@@ -108,7 +162,7 @@ Example: pkg1::pkg2::"
 	  "\\|" mythryl-string-regexp
 	  "\\)"))
 
-(defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]")
+(defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -134,6 +188,33 @@ This is a good place to put your preferred key bindings.")
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
 
+(defgroup mythryl-indent () "Customizing indentation support for mythryl-mode"
+  :group 'mythryl)
+
+(defcustom mythryl-if-indent-level 5
+  "Indentation level for if blocks."
+  :group 'mythryl-indent :type 'integer)
+(defcustom mythryl-case-indent-level 5
+  "Indentation level for case blocks."
+  :group 'mythryl-indent :type 'integer)
+(defcustom mythryl-brace-indent-level 3
+  "Indentation level for braced blacks."
+  :group 'mythryl-indent :type 'integer)
+(defcustom mythryl-paren-indent-level 2
+  "Indentation level for open parenthesis"
+  :group 'mythryl-indent :type 'integer)
+(defcustom mythryl-block-indent-level 4
+  "Indentation level for other blocks.
+
+This includes \"fun..end\", \"where..end\",
+\"except..end\", \"stipulate..herein..end\""
+  :group 'mythryl-indent :type 'integer)
+(defcustom mythryl-fun-flexible-indent t
+  "Allow some flexibility in the indentation of \"fun\" blocks
+
+Support for this functionality is incomplete and buggy."
+  :group 'mythryl-indent :type 'boolean)
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -147,27 +228,20 @@ This is a good place to put your preferred key bindings.")
 		 (while
 		     (and
 		      (backward-to-indentation 1)
-		      (looking-at "=$")
-		      ;; (not (looking-at
-		      ;; 	    ;; skip lines which do not affect
-		      ;; 	    ;; indentation
-		      ;; 	    (eval-when-compile
-		      ;; 	      (concat
-		      ;; 	       "\\(\\("
-		      ;; 	       mythryl-op-regexp "+"
-		      ;; 	       "\\)[ \t]*\\)+"
-		      ;; 	       mythryl-comment-line-regexp
-		      ;; 	       ))))
+		      (or (looking-at "=*[ \t]*$")
+			  (looking-at mythryl-comment-line-regexp)
+			  (looking-at "\\<where\\>")
+			  ;; 'where' may be after a package or a code block
+			  )
 		      (or (not p) (< (point) p))
 		      )
-		   ;;(recursive-edit)
 		   (setq p (point))))
 	       (mythryl-skip-closing)
 	       (cons (current-indentation)
 		     (point))))
 	  (mp nil))
-    (save-excursion
-	(let ((bl (cdr b)) (i 0) (ln 1) (fn nil))
+      (save-excursion
+	(let ((bl (cdr b)) (i 0) (ln 1) (fun '(nil)) (pkg '(nil)))
 	  (backward-to-indentation 0)
 	  (mythryl-skip-closing-2)
 	  (narrow-to-region bl (point))
@@ -181,8 +255,9 @@ This is a good place to put your preferred key bindings.")
 		       (regexp-opt
 			(mapcar
 			 'symbol-name
-			 '(where end case esac if fn fun fi then else elif
-				 stipulate herein except))
+			 '(where end case esac if fi then else elif
+				 stipulate herein except
+				 fun fn package))
 			'words)
 		       "\\)"))
 		    nil t)
@@ -191,10 +266,13 @@ This is a good place to put your preferred key bindings.")
 		    (mae (match-end 0)))
 		(setq i (+ i
 			   (cond
-			    ((let ((m (match-string 2)))
+			    ((let ((m (match-string 2))) ;; => and =
 			       (when m
 				 (setq mae (match-end 2))
-				 (if fn (progn (setq fn nil) (if (string= m "=>") +4 0)) 0))))
+				 (if (car fun) (progn (setcar fun nil)
+						      (if (string= m "=>")
+							  mythryl-block-indent-level
+							0)) 0))))
 			    ((eq p ?\n) (setq ln -1) 0)
 			    ((or (eq p ?\")
 				 (eq p ?#)
@@ -203,69 +281,81 @@ This is a good place to put your preferred key bindings.")
 				   mythryl-comment-or-string-regexp)
 				  (setq mae (match-end 0)))
 			     0)
-			    ((eq p ?\;) (setq fn nil) 0)
-			    ((eq p ?\{) +4)
-			    ((eq p ?\}) -4)
-			    ((or (eq p ?\[) (eq p ?\()) +2)
-			    ((or (eq p ?\]) (eq p ?\))) -2)
+			    ((eq p ?\;) (setcar fun nil) (setcar pkg nil) 0)
+			    ((eq p ?\{)
+			     (setq fun (cons nil fun)
+				   pkg (cons nil pkg))
+			     mythryl-brace-indent-level)
+			    ((eq p ?\})
+			     (setq fun (or (cdr fun) '(nil))
+				   pkg (or (cdr pkg) '(nil)))
+			     (- mythryl-brace-indent-level))
+			    ((or (eq p ?\[) (eq p ?\()) mythryl-paren-indent-level)
+			    ((or (eq p ?\]) (eq p ?\))) (- mythryl-paren-indent-level))
 			    ((eq p ?c)
 			     (cond
-			      ((looking-at "\\<case\\>") +5)
+			      ((looking-at "\\<case\\>") mythryl-case-indent-level)
 			      (t 0)))
 			    ((eq p ?f)
 			     (cond
-			      ((looking-at "\\<fu?n\\>") (setq fn t) 0)
-			      ((looking-at "\\<fi\\>") -5)
+			      ((looking-at "\\<fu?n\\>") (setcar fun t) 0)
+			      ((looking-at "\\<fi\\>") (- mythryl-if-indent-level))
 			      (t 0)))
 			    ((eq p ?e)
 			     (cond
-			      ((looking-at "\\<end\\>") -4)
+			      ((looking-at "\\<end\\>") (- mythryl-block-indent-level))
 			      ((looking-at "\\<else\\>")
-			       (let ((n ln)) (setq ln 0) (* n 5)))
+			       (let ((n ln)) (setq ln 0) (* n mythryl-if-indent-level)))
 			      ((looking-at "\\<elif\\>")
-			       (let ((n ln)) (setq ln 0) (* n 5)))
-			      ((looking-at "\\<esac\\>") -5)
+			       (let ((n ln)) (setq ln 0) (* n mythryl-if-indent-level)))
+			      ((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
 			      ((looking-at "\\<except\\>")
-			       (setq fn t) 0)
+			       (setcar fun t) 0)
 			      (t 0)))
 			    ((eq p ?h)
 			     (cond
 			      ((looking-at "\\<herein\\>")
-			       (let ((n ln)) (setq ln 0) (* n 4)))
+			       (let ((n ln)) (setq ln 0)
+				    (* n mythryl-block-indent-level)))
 			      (t 0)))
 			    ((eq p ?i)
 			     (cond
 			      ((looking-at "\\<if\\>")
 			       (setq ln 0)
-			       5)
+			       mythryl-if-indent-level)
+			      (t 0)))
+			    ((eq p ?p)
+			     (cond
+			      ((looking-at "\\<package\\>") (setcar pkg t) 0)
 			      (t 0)))
 			    ((eq p ?s)
 			     (cond
-			      ((looking-at "\\<stipulate\\>") +4)
+			      ((looking-at "\\<stipulate\\>") mythryl-block-indent-level)
 			      (t 0)))
 			    ((eq p ?t)
 			     (cond
 			      ((looking-at "\\<then\\>")
-			       (let ((n ln)) (setq ln 0) (* n 5)))
+			       (let ((n ln)) (setq ln 0) (* n mythryl-if-indent-level)))
 			      (t 0)))
 			    ((eq p ?w)
 			     (cond
-			      ((looking-at "\\<where\\>") +4)
+			      ((looking-at "\\<where\\>")
+			       (if (car pkg) 0 mythryl-block-indent-level))
 			      (t 0)))
 			    (t (error
 				(concat
 				 "Unexpected char while scanning: "
 				 (string p))))
 			    )))
-		;; (princ 1) (recursive-edit)
 		(goto-char mae))))
 	  (goto-char (point-max)) (widen)
 	  (setq b (car b))
 	  (backward-to-indentation 0)
 	  (setq i (+ b i))
-	  (if fn
-	      (if (< c b) (setq i b)
-		(if (> c (+ b 4)) (setq i (+ b 4))
+	  (if (and mythryl-fun-flexible-indent (car fun))
+	      (if (< c b)
+		  (setq i b)
+		(if (> c (+ b mythryl-block-indent-level)) (setq i (+ b mythryl-block-indent-level))
 		  (setq c b))))
 	  (unless (= c i)
 	    (delete-region
@@ -274,6 +364,20 @@ This is a good place to put your preferred key bindings.")
 	    (indent-to i)
 	    (setq mp (point)))))
     (if (and mp (< (point) mp)) (goto-char mp)))))
+
+(defcustom mythryl-auto-indent t
+  "Whether to use automatic indentation in `mythryl-mode'"
+  :type 'boolean :group 'mythryl :group 'mythryl-indent)
+
+(defcustom mythryl-electric-keys nil
+  "Whether to enable some electric keys in `mythryl-mode'.
+
+Currently, only <colon> is defined as an electric key."
+  :type 'boolean :group 'mythryl)
+
+(defcustom mythryl-syntax-highlighting t
+  "Whether to enable syntax highlighting in `mythryl-mode'."
+  :type 'boolean :group 'mythryl)
 
 (defun mythryl-electric-key (arg)
   "Insert a key (\\{self-insert-command}) and indent line."
@@ -288,75 +392,107 @@ This is a good place to put your preferred key bindings.")
 ;;   (setq mythryl-mode-map (copy-keymap 'fundamental-mode-map))
 ;;   )
 
+(defconst mythryl-mode-font-lock-keywords
+  (list
+   (list
+    (eval-when-compile
+      (concat "\\(#[0-9]+\\|"
+	      (regexp-opt
+	       (mapcar 'symbol-name
+		       '(print)) 'words)
+	      "\\)"))
+    1 font-lock-builtin-face)
+   (list
+    (eval-when-compile
+      (regexp-opt
+       ;; Maybe add: before, &&, ||, in; remove 'then'
+       (list "abstype" "also" "and" "api" "as" "case" "class" "elif"
+	     "else" "end" "eqtype" "esac" "except" "exception" "fi"
+	     "field" "fn" "for" "fprintf" "fun" "generic" "generic_api"
+	     "herein" "if" "include" "infix" "infixr" "lazy" "method"
+	     "my" "nonfix" "op" "or" "overload" "package" "printf"
+	     "raise" "rec" "sharing" "sprintf" "stipulate" "then" "type"
+	     "val" "where" "with" "withtype") 'words))
+    1 font-lock-keyword-face)
+   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" 1 mythryl-mode-pkg-face)
+   (list "\\<\\(#?[a-z][a-z'_0-9]*\\|([\\!%&$+/:<=>?@~|*^-]+)\\)\\>" 0 font-lock-variable-name-face)
+   (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>" 0 font-lock-type-face)
+   (list "\\<_\\>" 0 mythryl-mode-underscore-face)
+   (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>" 0 font-lock-constant-face)
+   (list mythryl-op-regexp 0 mythryl-mode-op-face)
+   (list "[][(){};,.]+" 0 mythryl-mode-structure-face)
+   ))
+
+;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
   "Major mode for the Mythryl programming language."
   :group 'mythryl
   ;; :abbrev-table (let ((a (make-abbrev-table)))
-  (define-key mythryl-mode-map ";" 'mythryl-electric-key)
-  (set (make-local-variable 'indent-line-function) 'mythryl-indent-line)
+  :syntax-table mythryl-mode-syntax-table
+  (when mythryl-electric-keys
+    (define-key mythryl-mode-map ";" 'mythryl-electric-key))
+  (when mythryl-auto-indent
+    (set (make-local-variable 'indent-line-function) 'mythryl-indent-line))
+  (set (make-local-variable 'compile-command) "mythryld ")
   (set (make-local-variable 'comment-start) "# ")
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults
-(list
- 
- ;; KEYWORDS
-(list
- (list mythryl-comment-regexp 0 font-lock-comment-face)
- (list
-  (eval-when-compile
-    (concat "\\(#[0-9]+\\|"
-	    (regexp-opt
-	     (mapcar 'symbol-name
-		     '(print)) 'words)
-	    "\\)"))
-  1 font-lock-builtin-face)
- (list
-  (eval-when-compile
-    (regexp-opt
-     ;; Maybe add: before, &&, ||
-     (list "abstype" "also" "and" "api" "as" "case" "class" "elif"
-	   "else" "end" "eqtype" "esac" "except" "exception" "fi"
-	   "field" "fn" "for" "fprintf" "fun" "generic" "generic_api"
-	   "herein" "if" "include" "infix" "infixr" "lazy" "method"
-	   "my" "nonfix" "op" "or" "overload" "package" "printf"
-	   "raise" "rec" "sharing" "sprintf" "stipulate" "then" "type"
-	   "val" "where" "with" "withtype") 'words))
-  1 font-lock-keyword-face)
- (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" 1 mythryl-mode-pkg-face)
- (list "\\<\\(#?[a-z][a-z'_0-9]*\\|([\\!%&$+/:<=>?@~|*^-]+)\\)\\>" 0 font-lock-variable-name-face)
- (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>" 0 font-lock-type-face)
- (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>" 0 font-lock-constant-face)
- (list (eval-when-compile (concat mythryl-op-regexp "+")) 0 mythryl-mode-op-face)
- (list "[][(){};,.]+" 0 mythryl-mode-structure-face)
- (list mythryl-string-regexp 0 font-lock-string-face)
- )
-;; KEYWORDS-ONLY
-nil
-;; CASE-FOLD
-nil
-;; SYNTAX-ALIST
-'(
-  (?\# . "w 12")
-  (?\! . ". 2")
-  (" \t" . "- 2")
-  (?\n . ">")
-  ;; (?\/ . ". 14b")
-  ;; (?\* . ". 23b")
-  (?\( . "()")
-  (?\{ . "(}")
-  (?\[ . "(]")
-  ("$:=&@\\^-.%+?>~/*" . ".")
-  (?\' . "w")
-  (?_ . "w")
-  (?\" . "\"")
-  (?\\ . "\\")
+  (set (make-local-variable 'comment-start-skip) "#[#!\t ]")
+  (set (make-local-variable 'font-lock-syntactic-keywords)
+       (list (list "#[^#! \t\n]" 0 "w")
+	     (list "[.][|/]/" 0 "\"")))
+  (when mythryl-syntax-highlighting
+    (set
+     (make-local-variable 'font-lock-defaults)
+     (list
+      ;; KEYWORDS
+      mythryl-mode-font-lock-keywords
+      ;; KEYWORDS-ONLY
+      nil
+      ;; CASE-FOLD
+      nil
+      ;; SYNTAX-ALIST
+      nil
+      ;; SYNTAX-BEGIN
+      'beginning-of-line
+      ;; OTHER-VARS
+      )))
   )
-;; SYNTAX-BEGIN
-nil
-;; OTHER-VARS
-)))
-;;(make-local-variable 'font-lock-syntax-table)
-;;(setq font-lock-syntax-table mythryl-syntax-table))
+
+;;; * Mythryl interaction mode
+
+;;;###autoload
+(defun run-mythryl ()
+  "Runs mythryl's interactive compiler."
+  (interactive)
+  (switch-to-buffer (make-comint "mythryl" "mythryld"))
+  (mythryl-font-lock-mode 1)
+  )
+
+(defun mythryl-font-lock-mode (&rest r)
+  (interactive)
+  (when mythryl-syntax-highlighting
+    (set
+     (make-local-variable 'font-lock-defaults)
+     (list
+      ;; KEYWORDS
+      mythryl-mode-font-lock-keywords
+      ;; KEYWORDS-ONLY
+      nil
+      ;; CASE-FOLD
+      nil
+      ;; SYNTAX-ALIST
+      nil
+      ;; SYNTAX-BEGIN
+      'beginning-of-line
+      ;; OTHER-VARS
+      ))
+    (set
+     (make-local-variable 'font-lock-keywords)
+     mythryl-mode-font-lock-keywords)
+    (set (make-local-variable 'font-lock-keywords-only) nil)
+    (set (make-local-variable 'font-lock-syntax-table)
+	 mythryl-mode-syntax-table)
+    (set-syntax-table mythryl-mode-syntax-table)
+    (apply 'font-lock-mode r)))
 
 (provide 'mythryl-mode)
