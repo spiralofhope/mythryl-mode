@@ -152,10 +152,8 @@ This is a bold character by default."
 (defconst mythryl-comment-regexp
   ;; "\\(#\\($\\|[ #!]\\).*\\|/[*]\\([^*]\\|\\*[^/]\\)*[*]/\\)" ;; appears to be buggy
   (concat "\\(" mythryl-comment-line-regexp "\\|/[*]+\\([^*/]+/*[*]*\\)*[*]/\\)"))
-;; (re-search-forward mythryl-comment-regexp) /* blue */
 
 (defconst mythryl-string-regexp "\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"")
-;; (re-search-forward mythryl-string-regexp) "Hel\nlo"
 
 (defconst mythryl-comment-or-string-regexp
   (concat "\\(" mythryl-comment-regexp
@@ -399,7 +397,7 @@ Currently, only <colon> is defined as an electric key."
    (list
     (eval-when-compile
       (regexp-opt
-       ;; Maybe add: before, &&, ||, in; remove 'then'
+       ;; Maybe add "before", and remove "then"
        (list "abstype" "also" "and" "api" "as" "case" "class" "elif"
 	     "else" "end" "eqtype" "esac" "except" "exception" "fi"
 	     "field" "fn" "for" "fprintf" "fun" "generic" "generic_api"
