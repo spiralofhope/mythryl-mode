@@ -1,7 +1,7 @@
 ;;; mythryl.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010 Michele Bini <rev.22@hotmail.com>
+;; Copyright (C) 2010, 2011 Michele Bini <rev.22@hotmail.com>
 ;;
 ;; Largly cribbed from Stefan Monnier's sml-mode. See:
 ;; http://www.iro.umontreal.ca/~monnier/elisp/
@@ -394,14 +394,8 @@ Currently, only <colon> is defined as an electric key."
 
 (defconst mythryl-mode-font-lock-keywords
   (list
-   (list
-    (eval-when-compile
-      (concat "\\(#[0-9]+\\|"
-	      (regexp-opt
-	       (mapcar 'symbol-name
-		       '(print)) 'words)
-	      "\\)"))
-    1 font-lock-builtin-face)
+   (list "#[0-9]" 0 font-lock-builtin-face)
+   (list "^#DO\\>" 0 font-lock-preprocessor-face)
    (list
     (eval-when-compile
       (regexp-opt
@@ -415,7 +409,8 @@ Currently, only <colon> is defined as an electric key."
 	     "val" "where" "with" "withtype") 'words))
     1 font-lock-keyword-face)
    (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" 1 mythryl-mode-pkg-face)
-   (list "\\<\\(#?[a-z][a-z'_0-9]*\\|([\\!%&$+/:<=>?@~|*^-]+)\\)\\>" 0 font-lock-variable-name-face)
+   (list "(\\([\\!%&$+/:<=>?@~|*^-]+\\))" 0 font-lock-variable-name-face) ;; Haskell style operator references
+   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>" 0 font-lock-variable-name-face)
    (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>" 0 font-lock-type-face)
    (list "\\<_\\>" 0 mythryl-mode-underscore-face)
    (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>" 0 font-lock-constant-face)
