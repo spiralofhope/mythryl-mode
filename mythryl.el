@@ -73,8 +73,11 @@
 ;; Added run-mythryl						--Rev22, 2010-02-21
 ;; Added configurable indent levels.				--Rev22, 2010-02-21
 
-;; TODO
-;; fix for: ~/src/mythryl/mythryl-7.110.58/src/lib/src/random.api --Rev22
+;; * BUGS
+
+;; Trying to indenting multi-line comments (and sometimes after them)
+;; leads to incorrect behaviour. See:
+;; mythryl-7.110.58/src/lib/src/random.api
 
 ;;; Code:
  
