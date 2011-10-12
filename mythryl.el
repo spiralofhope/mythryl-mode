@@ -462,13 +462,19 @@ Currently, only <colon> is defined as an electric key."
   (when mythryl-auto-indent
     (set (make-local-variable 'indent-line-function) 'mythryl-indent-line))
   (set (make-local-variable 'compile-command) "mythryld ")
-  (set (make-local-variable 'comment-start) "#\\( \\|$\\)")
-  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]+\\|$\\)")
-  ;; (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/")
-  (set (make-local-variable 'comment-end) " */")
+
+  (set (make-local-variable 'comment-use-syntax) t)
+  ;; (set (make-local-variable 'comment-style) 'plain) ;; Will configuring this help?
+  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]\\|$\\)")
+  (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how would it help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
+  (set (make-local-variable 'comment-end) "") ;; "*/")
+
+  (set (make-local-variable 'font-lock-comment-end-skip) "[\t ]*[*]+/")
   (set (make-local-variable 'font-lock-syntactic-keywords)
        (list (list "#[^#! \t\n]" 0 "w")
 	     (list "[.][|/]/" 0 "\"")))
+  
   (when mythryl-syntax-highlighting
     (set
      (make-local-variable 'font-lock-defaults)
