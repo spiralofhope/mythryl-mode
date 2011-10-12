@@ -1,7 +1,7 @@
 ;;; mythryl.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010, 2011 Michele Bini <rev.22@hotmail.com>
+;; Copyright (C) 2010, 2011 Michele Bini <rev.22@hotmail.com> aka Rev22
 ;;
 ;; Largly cribbed from Stefan Monnier's sml-mode. See:
 ;; http://www.iro.umontreal.ca/~monnier/elisp/
@@ -61,7 +61,7 @@
 
 ;; * TODO
 
-;; Nice ideas for mythryl-mode.el:
+;; + add mythryl-mode-map
 ;; + mythryl-interaction-mode
 ;; + support of outline
 ;; + support more indentation styles
@@ -69,15 +69,12 @@
 
 ;; * Changelog:
 
-;; Added comment-start-skip, makes 'uncomment-region' possible.
-;; -- Michele Bini, 2010-02-18
-;; * Added run-mythryl
-;; -- Michele Bini, 2010-02-21
-;; Added configurable indent levels.
-;; -- Michele Bini, 2010-02-21
+;; Added comment-start-skip, makes 'uncomment-region' possible. --Rev22, 2010-02-18
+;; Added run-mythryl						--Rev22, 2010-02-21
+;; Added configurable indent levels.				--Rev22, 2010-02-21
 
 ;; TODO
-;; fix: ~/src/mythryl/mythryl-7.110.58/src/lib/src/random.api
+;; fix for: ~/src/mythryl/mythryl-7.110.58/src/lib/src/random.api --Rev22
 
 ;;; Code:
  
@@ -383,7 +380,6 @@ Currently, only <colon> is defined as an electric key."
   (self-insert-command (prefix-numeric-value arg))
   (apply indent-line-function ()))
 
-
 ;; (defvar mythryl-mode-map nil
 ;;   "Keymap used for \\{mythryl-mode}")
 ;; (if mythryl-mode-map nil
@@ -466,8 +462,10 @@ Currently, only <colon> is defined as an electric key."
   (when mythryl-auto-indent
     (set (make-local-variable 'indent-line-function) 'mythryl-indent-line))
   (set (make-local-variable 'compile-command) "mythryld ")
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "#[#!\t ]")
+  (set (make-local-variable 'comment-start) "#\\( \\|$\\)")
+  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]+\\|$\\)")
+  ;; (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/")
+  (set (make-local-variable 'comment-end) " */")
   (set (make-local-variable 'font-lock-syntactic-keywords)
        (list (list "#[^#! \t\n]" 0 "w")
 	     (list "[.][|/]/" 0 "\"")))
