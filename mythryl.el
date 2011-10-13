@@ -71,7 +71,7 @@
 
 ;; Added comment-start-skip, makes 'uncomment-region' possible.
 ;; -- Michele Bini, 2010-02-18
-;; * Added run-mythryl
+;; Added run-mythryl
 ;; -- Michele Bini, 2010-02-21
 ;; Added configurable indent levels.
 ;; -- Michele Bini, 2010-02-21
