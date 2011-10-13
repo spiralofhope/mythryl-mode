@@ -75,7 +75,7 @@
 
 ;; * BUGS
 
-;; Trying to indenting multi-line comments (and sometimes after them)
+;; Trying to indent multi-line comments (and sometimes after them)
 ;; leads to incorrect behaviour. See:
 ;; mythryl-7.110.58/src/lib/src/random.api
 
@@ -533,4 +533,4 @@ Currently, only <colon> is defined as an electric key."
     (set-syntax-table mythryl-mode-syntax-table)
     (apply 'font-lock-mode r)))
 
-(provide 'mythryl)
+(provide 'mythryl-mode)
