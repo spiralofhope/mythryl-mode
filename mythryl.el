@@ -109,7 +109,6 @@
 (defface  mythryl-mode-op-face
   '((((class color) (background light)) (:foreground "blue"))
     (((class color) (background dark))  (:foreground "yellow"))
-    (((class grayscale))                (:foreground "black"))
     (t                                  ()))
   "Face used for non-alphabetic identifiers in mythryl"
   :group 'mythryl)
@@ -118,7 +117,6 @@
 (defface  mythryl-mode-pkg-face
   '((((class color) (background light)) (:foreground "#0af"))
     (((class color) (background dark))  (:foreground "#f50"))
-    (((class grayscale))                (:foreground "black"))
     (t                                  ()))
   "Face used for package identifiers in mythryl
 
@@ -129,7 +127,6 @@ Example: pkg1::pkg2::"
 (defface  mythryl-mode-structure-face
   '((((class color) (background light)) (:foreground "black"))
     (((class color) (background dark))  (:foreground "white"))
-    (((class grayscale))                (:foreground "white"))
     (t                                  ()))
   "Face used for structure characters in mythryl."
   :group 'mythryl)
@@ -138,7 +135,6 @@ Example: pkg1::pkg2::"
 (defface  mythryl-mode-underscore-face
   '(;;(((class color) (background light)) (:foreground "black"))
     ;;(((class color) (background dark))  (:foreground "white"))
-    ;;(((class grayscale))                (:foreground "white"))
     (t                                  (:weight bold :inherit font-lock-constant-face)))
   "Face used for the underscore wildcard.
 This is a bold character by default."
