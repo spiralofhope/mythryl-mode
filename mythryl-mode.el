@@ -488,4 +488,4 @@ Currently, only <colon> is defined as an electric key."
     (set-syntax-table mythryl-mode-syntax-table)
     (apply 'font-lock-mode r)))
 
-(provide 'mythryl)
+(provide 'mythryl-mode)
