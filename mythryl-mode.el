@@ -1,4 +1,4 @@
-;;; mythryl.el --- Major mode and support code for Mythryl
+;;; mythryl-mode.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <rev.22@hotmail.com> aka Rev22
@@ -7,20 +7,20 @@
 ;; http://www.iro.umontreal.ca/~monnier/elisp/
 ;;
  
-;; mythryl.el is not part of emacs.
+;; mythryl-mode.el is not part of emacs.
  
-;; "mythryl.el" is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
+;; This is is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
  
-;; "mythryl.el" is distributed in the hope that it will be useful,
+;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;; GNU General Public License for more details.
  
 ;; You should have received a copy of the GNU General Public License
-;; along with "mythryl.el"; see the file COPYING. If not, write to the
+;; along with this program; see the file COPYING. If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
  

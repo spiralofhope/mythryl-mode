@@ -1,7 +1,7 @@
 ## mythryl-mode for Emacs
 
 This directory contains mythryl-mode, a major mode for the Mythryl 
-programming language.  Consult mythryl.el for installation instructions.
+programming language.  Consult mythryl-mode.el for installation instructions.
 
 Mythryl is an advanced programming language derived from SML/NJ
 by Cynbe ru Taren.  See http://www.mythryl.org/ for more.
