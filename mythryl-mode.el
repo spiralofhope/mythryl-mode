@@ -1,13 +1,11 @@
 ;;; mythryl-mode.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010, 2011 Michele Bini <rev.22@hotmail.com> aka Rev22
-;;
-;; Largly cribbed from Stefan Monnier's sml-mode. See:
-;; http://www.iro.umontreal.ca/~monnier/elisp/
-;;
- 
-;; mythryl-mode.el is not part of emacs.
+;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
+
+;; Maintainer: Michele Bini <michele.bini@gmail.com>
+
+;; mythryl.el is not part of emacs.
  
 ;; This is is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -28,16 +26,16 @@
  
 ;; A major mode for editing the Mythryl programming language.
 ;;
-;; This version of mythryl mode is derived from Stefan Monnier's
-;; sml-mode. See http://www.iro.umontreal.ca/~monnier/elisp/, but
-;; as of August 2009, the instructions on that page for accessing
-;; the svn repository were incorrect.
+;; Mythryl is a safe, functional programming language, derived by
+;; Cynbe ru Taren from SML/NJ, but featuring a clear, more
+;; programmer-friendly syntax.  See http://mythryl.org for more.
 ;;
-;; To use this mode, install the elisp files from the sml-mode
-;; suite from the above URL somewhere in your elisp load path,
-;; along with this file. Insert the expression:
-;; (load "mythryl-mode")
-;; Somewhere in your .emacs file.
+;; To use this mode, install this file in your elisp load path; then
+;; insert the expression:
+;;
+;;   (load "mythryl-mode")
+;;
+;; in your .emacs file.
 
 ;; Other useful lines for your .emacs (to automatically activate
 ;; mythryl-mode)
@@ -53,13 +51,13 @@
 ;;       (append '(("mythryl" . mythryl-mode))
 ;;               interpreter-mode-alist))
 
-;; Indentation support:
+;;; BUGS
 
-;; The current indentation engine is rather unsophisticated and only
-;; look at the previous line of code to determine the amount to indent
-;; the current line to.
+;; Trying to indent multi-line comments (and sometimes after them)
+;; leads to incorrect behaviour.
+;; Try: mythryl-7.110.58/src/lib/src/random.api
 
-;; * TODO
+;;; TODO
 
 ;; + add mythryl-mode-map
 ;; + mythryl-interaction-mode
@@ -67,20 +65,35 @@
 ;; + support more indentation styles
 ;; + command (possibly tied to "electric keys")
 
-;; * Changelog:
+;;; History:
+
+;; Mythryl-mode was derived by Phil Rand from Stefan Monnier's sml-mode.
 
 ;; Added comment-start-skip, makes 'uncomment-region' possible. --Rev22, 2010-02-18
-;; Added run-mythryl						--Rev22, 2010-02-21
+;; Added run-mythryl.						--Rev22, 2010-02-21
 ;; Added configurable indent levels.				--Rev22, 2010-02-21
 
-;; * BUGS
+;; After the tragic loss of the original author and maintainer Phil Rand in 2011
+;; I decided to enlist as a maintainer.				--Rev22, 2011-11-06
 
-;; Trying to indent multi-line comments (and sometimes after them)
-;; leads to incorrect behaviour. See:
-;; mythryl-7.110.58/src/lib/src/random.api
+;;; Repositories:
+
+;; You can find new versions of this file at the following locations:
+
+;; http://github.com/rev22/mythryl-mode
+;; EmacsWiki: http://www.emacswiki.org/emacs/MythrylMode
 
 ;;; Code:
- 
+;;
+;; This version of mythryl mode is derived from Stefan Monnier's
+;; sml-mode. See http://www.iro.umontreal.ca/~monnier/elisp/, but
+;; as of August 2009, the instructions on that page for accessing
+;; the svn repository were incorrect.
+
+;; The current indentation engine is rather unsophisticated and only
+;; look at the previous line of code to determine the amount to indent
+;; the current line to.
+
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
 

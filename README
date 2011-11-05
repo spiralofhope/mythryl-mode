@@ -1,7 +1,54 @@
-## mythryl-mode for Emacs
+This directory contains mythryl-mode, an Emacs major mode for the Mythryl 
+programming language.
 
-This directory contains mythryl-mode, a major mode for the Mythryl 
-programming language.  Consult mythryl-mode.el for installation instructions.
+Copyright (C) 2009 Phil Rand <philrand@gmail.com>
+Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com>
 
-Mythryl is an advanced programming language derived from SML/NJ
-by Cynbe ru Taren.  See http://www.mythryl.org/ for more.
+Current maintainer: Michele Bini <michele.bini@gmail.com>
+
+A major mode for editing the Mythryl programming language.
+
+Mythryl is a safe, functional programming language, derived by Cynbe
+ru Taren from SML/NJ, but featuring a clear, more programmer-friendly
+syntax.  See http://mythryl.org for more.
+
+Installation
+------------
+
+To use this mode, install this file in your elisp load path; then
+insert the expression:
+
+  (load "mythryl-mode")
+
+in your .emacs file.
+
+Other useful lines for your .emacs (to automatically activate
+mythryl-mode)
+
+;; for .pkg and .api files
+(setq auto-mode-alist
+      (append '(("\\.pkg$" . mythryl-mode)
+                ("\\.api$" . mythryl-mode))
+              auto-mode-alist))
+
+;; for scripts starting with #!/.../mythryl
+(setq interpreter-mode-alist
+      (append '(("mythryl" . mythryl-mode))
+              interpreter-mode-alist))
+
+Repositories
+------------
+
+You can find versions of mythryl-mode at the following locations:
+
+http://github.com/rev22/mythryl-mode
+
+EmacsWiki: http://www.emacswiki.org/emacs/MythrylMode
+
+History
+-------
+
+Mythryl-mode was derived by Phil Rand from Stefan Monnier's sml-mode.
+
+After the tragic loss of the original author and maintainer Phil Rand in 2011
+I (Michele) decided to enlist as a maintainer.
