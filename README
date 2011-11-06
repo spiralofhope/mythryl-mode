@@ -6,8 +6,6 @@ Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com>
 
 Current maintainer: Michele Bini <michele.bini@gmail.com>
 
-A major mode for editing the Mythryl programming language.
-
 Mythryl is a safe, functional programming language, derived by Cynbe
 ru Taren from SML/NJ, but featuring a clear, more programmer-friendly
 syntax.  See http://mythryl.org for more.
