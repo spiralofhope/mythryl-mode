@@ -378,10 +378,10 @@ Support for this functionality is incomplete and buggy."
   "Whether to use automatic indentation in `mythryl-mode'"
   :type 'boolean :group 'mythryl :group 'mythryl-indent)
 
-(defcustom mythryl-electric-keys nil
+(defcustom mythryl-electric-keys t
   "Whether to enable some electric keys in `mythryl-mode'.
 
-Currently, only <colon> is defined as an electric key."
+Currently, \";\" and \"}\" are defined as electric keys."
   :type 'boolean :group 'mythryl)
 
 (defcustom mythryl-syntax-highlighting t
@@ -394,11 +394,13 @@ Currently, only <colon> is defined as an electric key."
   (self-insert-command (prefix-numeric-value arg))
   (apply indent-line-function ()))
 
-;; (defvar mythryl-mode-map nil
-;;   "Keymap used for \\{mythryl-mode}")
-;; (if mythryl-mode-map nil
-;;   (setq mythryl-mode-map (copy-keymap 'fundamental-mode-map))
-;;   )
+(defvar mythryl-mode-map nil
+   "Keymap used for \\{mythryl-mode}")
+(if mythryl-mode-map nil
+  (setq mythryl-mode-map (copy-keymap 'fundamental-mode-map))
+  (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
+  (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)
+  )
 
 (defconst mythryl-mode-font-lock-keywords
   (list
