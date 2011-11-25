@@ -51,7 +51,7 @@
 ;;       (append '(("mythryl" . mythryl-mode))
 ;;               interpreter-mode-alist))
 
-;;; BUGS
+;;; Known bugs:
 
 ;; Trying to indent multi-line comments (and sometimes after them)
 ;; leads to incorrect behaviour.
@@ -64,6 +64,8 @@
 ;; + support of outline
 ;; + support more indentation styles
 ;; + command (possibly tied to "electric keys")
+;; + test on xemacs
+;; + run emacs lint
 
 ;;; History:
 
@@ -84,7 +86,7 @@
 ;; EmacsWiki: http://www.emacswiki.org/emacs/MythrylMode
 
 ;;; Code:
-;;
+
 ;; This version of mythryl mode is derived from Stefan Monnier's
 ;; sml-mode. See http://www.iro.umontreal.ca/~monnier/elisp/, but
 ;; as of August 2009, the instructions on that page for accessing
