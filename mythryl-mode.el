@@ -473,11 +473,10 @@ Currently, \";\" and \"}\" are defined as electric keys."
 (defvar mythryl-mode-map nil
    "Keymap used for \\{mythryl-mode}")
 (if mythryl-mode-map nil
-  (setq mythryl-mode-map (copy-keymap 'fundamental-mode-map))
+  (setq mythryl-mode-map (make-sparse-keymap))
   (when mythryl-electric-keys
     (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
-    (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key))
-  )
+    (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)))
 
 (defconst mythryl-mode-font-lock-keywords
   (list
