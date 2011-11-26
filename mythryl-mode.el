@@ -65,7 +65,6 @@
 ;; + support of outline
 ;; + support more indentation styles
 ;; + command (possibly tied to "electric keys")
-;; + test on xemacs
 ;; + run emacs lint
 
 ;;; History:
