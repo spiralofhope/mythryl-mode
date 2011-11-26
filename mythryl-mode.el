@@ -479,7 +479,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
     (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)))
 
-(defconst mythryl-mode-font-lock-keywords
+(defvar mythryl-mode-font-lock-keywords
   (list
    (list
     (eval-when-compile
@@ -517,10 +517,10 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	       
    	       ) 'words)
              "\\)"))
-    1 font-lock-builtin-face)
-   (list "^#DO\\>" 0 font-lock-preprocessor-face)
-   (list "[.]\\(|[^|]*|\\)" 0 font-lock-string-face)
-   (list "[.]\\(/[^/]*/\\)" 0 font-lock-string-face)
+    (list 1 font-lock-builtin-face))
+   (list "^#DO\\>" 0 (list font-lock-preprocessor-face))
+   (list "[.]\\(|[^|]*|\\)" (list 0 font-lock-string-face))
+   (list "[.]\\(/[^/]*/\\)" (list 0 font-lock-string-face))
    (list
     (eval-when-compile
       (regexp-opt
@@ -532,15 +532,21 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	     "my" "nonfix" "op" "or" "overload" "package" "printf"
 	     "raise" "rec" "sharing" "sprintf" "stipulate" "then" "type"
 	     "val" "where" "with" "withtype") 'words))
-    1 font-lock-keyword-face)
-   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" 1 mythryl-mode-pkg-face)
+    (list 1 font-lock-keyword-face))
+   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
-   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>" 0 font-lock-variable-name-face)
-   (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>" 0 font-lock-type-face)
-   (list "\\<_\\>" 0 mythryl-mode-underscore-face)
-   (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>" 0 font-lock-constant-face)
-   (list mythryl-op-regexp 0 mythryl-mode-op-face)
-   (list "[][(){};,.]+" 0 mythryl-mode-structure-face)
+   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
+	 (list 0 font-lock-variable-name-face))
+   (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>"
+	 (list 0 font-lock-type-face))
+   (list "\\<_\\>"
+	 (list 0 mythryl-mode-underscore-face))
+   (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>"
+	 (list 0 font-lock-constant-face))
+   (list mythryl-op-regexp
+	 (list 0 mythryl-mode-op-face))
+   (list "[][(){};,.]+"
+	 (list 0 mythryl-mode-structure-face))
    ))
 
 ;;;###autoload
@@ -573,7 +579,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
      (make-local-variable 'font-lock-defaults)
      (list
       ;; KEYWORDS
-      mythryl-mode-font-lock-keywords
+      'mythryl-mode-font-lock-keywords
       ;; KEYWORDS-ONLY
       nil
       ;; CASE-FOLD
