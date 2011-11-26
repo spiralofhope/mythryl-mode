@@ -264,8 +264,6 @@ This includes \"fun..end\", \"where..end\",
     (widen)
     (let ((oi (current-indentation)) ;; Original indentation
 	  (b (save-excursion
-	       ;;(beginning-of-buffer)
-	       ;;(beginning-of-line -10)
 	       (let (p)
 		 (while
 		     ;; Look for a previous line we can anchor the indentation to
