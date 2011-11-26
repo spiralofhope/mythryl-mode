@@ -81,8 +81,9 @@
 ;; Rand in 2011 I decided to enlist as a maintainer.
 ;;					--Rev22, 2011-11-06
 
-;; v2.2.0 Improved indentation engine, Added support for XEmacs
-;; (tested on version 21.4).		--Rev22, 2011-11-26
+;; v2.2.0 Fix electric keys support, improved indentation engine,
+;; ddded support for XEmacs (tested on version 21.4).
+;;					--Rev22, 2011-11-26
 
 ;;; Repositories:
 
