@@ -102,6 +102,8 @@
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
 
+(require 'font-lock)
+
 (defvar mythryl-mode-syntax-table
   (let ((st (make-syntax-table)))
     (modify-syntax-entry ?\# "< b" st)
