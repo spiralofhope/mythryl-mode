@@ -102,6 +102,7 @@
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
 
+(require 'custom)
 (require 'font-lock)
 
 (defvar mythryl-mode-syntax-table
