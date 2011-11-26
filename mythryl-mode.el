@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.1.0
+;; Version: 2.2.0
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -69,16 +69,20 @@
 
 ;;; History:
 
-;; Mythryl-mode was derived by Phil Rand from Stefan Monnier's sml-mode.
+;; Mythryl-mode was derived by Phil Rand from Stefan Monnier's
+;; sml-mode.
 
-;; Added comment-start-skip, makes 'uncomment-region' possible. --Rev22, 2010-02-18
-;; Added run-mythryl.						--Rev22, 2010-02-21
-;; Added configurable indent levels.				--Rev22, 2010-02-21
+;; Added comment-start-skip, makes 'uncomment-region'
+;; possible.				--Rev22, 2010-02-18
+;; Added run-mythryl.			--Rev22, 2010-02-21
+;; Added configurable indent levels.	--Rev22, 2010-02-21
 
-;; After the tragic loss of the original author and maintainer Phil Rand in 2011
-;; I decided to enlist as a maintainer.				--Rev22, 2011-11-06
+;; After the tragic loss of the original author and maintainer Phil
+;; Rand in 2011 I decided to enlist as a maintainer.
+;;					--Rev22, 2011-11-06
 
-;; Improved indentation engine.					--Rev22, 2011-11-26
+;; v2.2.0 Improved indentation engine, Added support for XEmacs
+;; (tested on version 21.4).		--Rev22, 2011-11-26
 
 ;;; Repositories:
 

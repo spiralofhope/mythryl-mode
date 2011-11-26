@@ -23,16 +23,16 @@ in your .emacs file.
 Other useful lines for your .emacs (to automatically activate
 mythryl-mode)
 
-;; for .pkg and .api files
-(setq auto-mode-alist
-      (append '(("\\.pkg$" . mythryl-mode)
-                ("\\.api$" . mythryl-mode))
-              auto-mode-alist))
+ ;; for .pkg and .api files
+ (setq auto-mode-alist
+       (append '(("\\.pkg$" . mythryl-mode)
+                 ("\\.api$" . mythryl-mode))
+               auto-mode-alist))
 
-;; for scripts starting with #!/.../mythryl
-(setq interpreter-mode-alist
-      (append '(("mythryl" . mythryl-mode))
-              interpreter-mode-alist))
+ ;; for scripts starting with #!/.../mythryl
+ (setq interpreter-mode-alist
+       (append '(("mythryl" . mythryl-mode))
+               interpreter-mode-alist))
 
 Repositories
 ------------
