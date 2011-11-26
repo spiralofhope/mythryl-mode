@@ -6,7 +6,7 @@
 ;; Version: 2.1.0
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
-;; mythryl.el is not part of emacs.
+;; mythryl.el is not part of Emacs
  
 ;; This is is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
