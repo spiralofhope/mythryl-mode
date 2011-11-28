@@ -82,7 +82,7 @@
 ;;					--Rev22, 2011-11-06
 
 ;; v2.2.0 Fix electric keys support, improved indentation engine,
-;; ddded support for XEmacs (tested on version 21.4).
+;; added support for XEmacs (tested on version 21.4).
 ;;					--Rev22, 2011-11-26
 
 ;;; Repositories:
@@ -98,10 +98,6 @@
 ;; sml-mode. See http://www.iro.umontreal.ca/~monnier/elisp/, but
 ;; as of August 2009, the instructions on that page for accessing
 ;; the svn repository were incorrect.
-
-;; The current indentation engine is rather unsophisticated and only
-;; look at the previous line of code to determine the amount to indent
-;; the current line to.
 
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
@@ -243,7 +239,9 @@ This includes \"fun..end\", \"where..end\",
 
 (defun mythryl-bosp () ;; Go back to the Beginning of a Mythryl statement
   (save-excursion
-    (beginning-of-line 0)
+    (while (progn
+	     (backward-to-indentation 1)
+	     (looking-at "\n")) t)
     (if (looking-at ".*\\(# \\)") ; # blue
 	(save-restriction
 	  (narrow-to-region (point-min) (match-beginning 1))
