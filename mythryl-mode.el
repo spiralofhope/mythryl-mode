@@ -239,229 +239,263 @@ This includes \"fun..end\", \"where..end\",
 
 (defun mythryl-boms ()
   "whether point is at the Beginning Of a Mythryl Statement"
-  (let ((closing-rgx ".*\\([;{]\\|also\\)[ \t]*$"))
-  (save-excursion
-    (while (progn
-	     (backward-to-indentation 1)
-	     (looking-at "\n")) t)
-    (if (looking-at ".*\\(# \\)") ; # blue
-	(save-restriction
-	  (narrow-to-region (point-min) (match-beginning 1))
-	  (beginning-of-line 1)
-	  (looking-at closing-rgx)) ; # blue
-      (looking-at closing-rgx)))))
+  (let ((closing-rgx ".*\\([;{]\\|\\<also\\>\\)[ \t]*$"))
+    (save-excursion
+      (while (progn
+	       (backward-to-indentation 1)
+	       (looking-at "\\(#.*\\|/[*].*\\)?\n")) t)
+      (if (looking-at ".*\\(# \\)") ; # blue
+	  (save-restriction
+	    (narrow-to-region (point-min) (match-beginning 1))
+	    (beginning-of-line 1)
+	    (looking-at closing-rgx)) ; # blue
+	(looking-at closing-rgx)))))
 
 (defun mythryl-indent-skip-expression () ;; Return end of next mythryl expression
-  (interactive)
   (save-excursion
     (goto-char (match-end 0))
     (condition-case nil
 	(progn (forward-sexp 1) (setq mae (point)))
       (error t))))
 
+(defun mythryl-indent-comment-2 ()
+  (save-excursion
+    (and (forward-to-indentation 0)
+	 (looking-at "#")
+	 (if (looking-at "##")
+	     (progn
+	       (kill-region
+		(point)
+		(save-excursion
+		  (beginning-of-line)
+		  (point)))
+	       t)
+	   (let ((c (current-indentation)))
+	     (let ((i
+		    (save-excursion
+		      ;; Go back until we find a non-empty line
+		      (while (progn
+			       (backward-to-indentation 1)
+			       (looking-at "\n")) t)
+		      
+		      ;; If it is a comment, align to it
+		      (and (looking-at "#") (current-indentation)))))
+	       (and i
+		    (or (= c i)
+			(progn
+			  (kill-region
+			   (point)
+			   (save-excursion
+			     (beginning-of-line)
+			     (point)))
+			  (indent-to (- i c))
+			  t)))))))))
+		     
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
 (defun mythryl-indent-line ()
   (interactive)
-  (save-restriction
-    (widen)
-    (let ((oi (current-indentation)) ;; Original indentation
-	  (b (save-excursion
-	       (let (p)
-		 (while
-		     ;; Look for a previous line we can anchor the indentation to
-		     (and
-		      (backward-to-indentation 1)
-		      (or (looking-at "=*[ \t]*$")
-			  (looking-at mythryl-comment-line-regexp) ;; Skip comments
-			  (looking-at "\\<where\\>") ;; 'where' may be after a package or a code block
-			  (and (not (= mythryl-continued-line-indent-level 0))
-			       ;; continue if we are not on the beginning
-			       ;; of a block
-			       (not (mythryl-boms))))
-		      (or (not p) (< (point) p))
-		      )
-		   (setq p (point))))
-	       (mythryl-skip-closing)
-	       (cons (current-indentation)
-		     (point))))
-	  (mp nil) ;; when set, point to restore after indenting
-	  )
-      (save-excursion
-	(let ((bl (cdr b))
-	      (i 0) ;; accumulated indentation level
-	      (li 0) ;; line-specific indentation level
-	      
+  (or
+   (mythryl-indent-comment-2) ;; Indent comments starting with ##, and consecutive comment lines
+   (save-restriction
+     (widen)
+     (let ((oi (current-indentation)) ;; Original indentation
+	   (b (save-excursion
+		(let (p)
+		  (while
+		      ;; Look for a previous line we can anchor the indentation to
+		      (and
+		       (backward-to-indentation 1)
+		       (or (looking-at "=*[ \t]*$")
+			   (looking-at mythryl-comment-line-regexp) ;; Skip comments
+			   (looking-at "\\<where\\>") ;; 'where' may be after a package or a code block
+			   (and (not (= mythryl-continued-line-indent-level 0))
+				;; continue if we are not on the beginning
+				;; of a block
+				(not (mythryl-boms))))
+		       (or (not p) (< (point) p))
+		       )
+		    (setq p (point))))
+		(mythryl-skip-closing)
+		(cons (current-indentation)
+		      (point))))
+	   (mp nil) ;; when set, point to restore after indenting
+	   )
+       (save-excursion
+	 (let ((bl (cdr b))
+	       (i 0) ;; accumulated indentation level
+	       (li 0) ;; line-specific indentation level
+	       
 	       ;; car of the stack is t when we are inside a pattern
 	       ;; matching statement
-	      (pat '(nil))
-	      
-	      ;; car of the stack is t when we are between the package
-	      ;; word and '{'
-	      (pkg '(nil))
+	       (pat '(nil))
+	       
+	       ;; car of the stack is t when we are between the package
+	       ;; word and '{'
+	       (pkg '(nil))
 
-	      ;; car of the stack is t when we are before the beginning of a new statement
-	      (pst '(t))
+	       ;; car of the stack is t when we are before the beginning of a new statement
+	       (pst '(t))
 
-	      ;; car of the stack is t when we are at the first line of a statement
-	      (fst '(t))
-	      )
-	  (backward-to-indentation 0)
-	  (mythryl-skip-closing-2)
-	  (narrow-to-region bl (point))
-	  (goto-char (point-min))
-	  (save-excursion
-	    (while (re-search-forward
-		    (eval-when-compile
-		      (concat
-		       "\\([][{}()\n\"#/;]\\|"
-		       "[^\\!%&$+/:<=>?@~|*^-]\\(=>?\\)[^\\!%&$+/:<=>?@~|*^-]\\|"
-		       (regexp-opt
-			(mapcar
-			 'symbol-name
-			 '(where end case esac if fi else elif
-				 stipulate also herein except
-				 fun fn package))
-			'words)
-		       "\\|" mythryl-word-regexp
-		       "\\|" mythryl-op-regexp
-		       "\\)"))
-		    nil t)
-	      (goto-char (match-beginning 0))
-	      (let ((p (char-after (point)))
-		    (mae (match-end 0)))
-		(setq li 0)
-		(setq i (+ i
-			   (cond
-			    ((let ((m (match-string 2))) ;; => and =
-			       (when m
-				 (setq mae (match-end 2))
-				 (if (car pat) (progn (setcar pat nil)
-						      (if (string= m "=>")
-							  mythryl-block-indent-level
-							0)) 0))))
-			    ((eq p ?\n) (setcar fst (car pst)) 0)
-			    ((or (eq p ?\")
-				 (eq p ?#)
-				 (eq p ?/))
-			     (cond
-			      ((looking-at mythryl-comment-regexp)
-			       (setq mae (match-end 0)))
-			      ((looking-at mythryl-string-regexp)
-			       (setcar pst nil)
-			       (setq mae (match-end 0)))
-			      (t nil))
-			     0)
-			    ((eq p ?\;) (setcar pat nil) (setcar pkg nil) (setcar pst t) 0)
-			    ((eq p ?\{)
-			     (setq pat (cons nil pat)
-				   pkg (cons nil pkg)
-				   pst (cons t pst)
-				   fst (cons nil fst)
-				   )
-			     mythryl-brace-indent-level)
-			    ((eq p ?\})
-			     (setq pat (or (cdr pat) '(nil))
-				   pkg (or (cdr pkg) '(nil))
-				   pst (or (cdr pst) '(nil))
-				   fst (or (cdr fst) '(nil))
-				   )
-			     ;;(setcar pst nil)
-			     (- mythryl-brace-indent-level))
-			    ((or (eq p ?\[) (eq p ?\())
-			     (setcar pst nil)
-			     mythryl-paren-indent-level)
-			    ((or (eq p ?\]) (eq p ?\)))
-			     (setcar pst nil)
-			     (- mythryl-paren-indent-level))
-			    ((eq p ?a)
-			     (cond
-			      ((looking-at "\\<also\\>")
-			       (setcar pst t)
-			       ;;(setq li (* -1 mythryl-block-indent-level))
-			       ;;mythryl-block-indent-level
-			       0)
-			      (t 0)))
-			    ((eq p ?c)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<case\\>")
-			       (setcar pst t)
-			       (mythryl-indent-skip-expression)
-			       mythryl-case-indent-level)
-			      (t 0)))
-			    ((eq p ?f)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<fu?n\\>") (setcar pat t) 0)
-			      ((looking-at "\\<fi\\>") (- mythryl-if-indent-level))
-			      (t 0)))
-			    ((eq p ?e)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<end\\>") (- mythryl-block-indent-level))
-			      ((looking-at "\\<else\\>")
-			       (setcar pst t)
-			       (setq li (* -2 mythryl-if-indent-level))
-			       mythryl-if-indent-level)
-			      ((looking-at "\\<elif\\>")
-			       (setcar pst t)
-			       (mythryl-indent-skip-expression)
-			       (setq li (* -2 mythryl-if-indent-level))
-			       mythryl-if-indent-level)
-			      ((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
-			      ((looking-at "\\<except\\>")
-			       (setcar pst t)
-			       (setcar pat t) 0)
-			      (t 0)))
-			    ((eq p ?h)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<herein\\>") (setcar pst t) (setq li (* -2 mythryl-block-indent-level)) mythryl-block-indent-level)
-			      (t 0)))
-			    ((eq p ?i)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<if\\>")
-			       (setcar pst t)
-			       (mythryl-indent-skip-expression)
-			       mythryl-if-indent-level)
-			      (t 0)))
-			    ((eq p ?p)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<package\\>") (setcar pkg t) 0)
-			      (t 0)))
-			    ((eq p ?s)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<stipulate\\>") (setcar pst t) mythryl-block-indent-level)
-			      (t 0)))
-			    ((eq p ?w)
-			     (setcar pst nil)
-			     (cond
-			      ((looking-at "\\<where\\>")
-			       (if (car pkg) 0
-				 (setcar pst t)
-				 (setq li (* -1 mythryl-block-indent-level))
-				 mythryl-block-indent-level
-				 ))
-			      (t 0)))
-			    (t (setcar pst nil) 0)
-			    )))
-		(goto-char mae))))
-	  (goto-char (point-max)) (widen)
-	  (setq b (car b))
-	  (backward-to-indentation 0)
-	  (setq i (+ (if (or (car fst) (car pst)) 0 4) li b i))
-	  (unless (= oi i)
-	    (delete-region
-	     (point)
-	     (save-excursion (beginning-of-line) (point)))
-	    (indent-to i)
-	    (setq mp (point)))))
-    (if (and mp (< (point) mp)) (goto-char mp)))))
+	       ;; car of the stack is t when we are at the first line of a statement
+	       (fst '(t))
+	       )
+	   (backward-to-indentation 0)
+	   (mythryl-skip-closing-2)
+	   (narrow-to-region bl (point))
+	   (goto-char (point-min))
+	   (save-excursion
+	     (while (re-search-forward
+		     (eval-when-compile
+		       (concat
+			"\\([][{}()\n\"#/;]\\|"
+			"[^\\!%&$+/:<=>?@~|*^-]\\(=>?\\)[^\\!%&$+/:<=>?@~|*^-]\\|"
+			(regexp-opt
+			 (mapcar
+			  'symbol-name
+			  '(where end case esac if fi else elif
+				  stipulate also herein except
+				  fun fn package))
+			 'words)
+			"\\|" mythryl-word-regexp
+			"\\|" mythryl-op-regexp
+			"\\)"))
+		     nil t)
+	       (goto-char (match-beginning 0))
+	       (let ((p (char-after (point)))
+		     (mae (match-end 0)))
+		 (setq li 0)
+		 (setq i (+ i
+			    (cond
+			     ((let ((m (match-string 2))) ;; => and =
+				(when m
+				  (setq mae (match-end 2))
+				  (if (car pat) (progn (setcar pat nil)
+						       (if (string= m "=>")
+							   mythryl-block-indent-level
+							 0)) 0))))
+			     ((eq p ?\n) (setcar fst (car pst)) 0)
+			     ((or (eq p ?\")
+				  (eq p ?#)
+				  (eq p ?/))
+			      (cond
+			       ((looking-at mythryl-comment-regexp)
+				(setq mae (match-end 0)))
+			       ((looking-at mythryl-string-regexp)
+				(setcar pst nil)
+				(setq mae (match-end 0)))
+			       (t nil))
+			      0)
+			     ((eq p ?\;) (setcar pat nil) (setcar pkg nil) (setcar pst t) 0)
+			     ((eq p ?\{)
+			      (setq pat (cons nil pat)
+				    pkg (cons nil pkg)
+				    pst (cons t pst)
+				    fst (cons nil fst)
+				    )
+			      mythryl-brace-indent-level)
+			     ((eq p ?\})
+			      (setq pat (or (cdr pat) '(nil))
+				    pkg (or (cdr pkg) '(nil))
+				    pst (or (cdr pst) '(nil))
+				    fst (or (cdr fst) '(nil))
+				    )
+			      ;;(setcar pst nil)
+			      (- mythryl-brace-indent-level))
+			     ((or (eq p ?\[) (eq p ?\())
+			      (setcar pst nil)
+			      mythryl-paren-indent-level)
+			     ((or (eq p ?\]) (eq p ?\)))
+			      (setcar pst nil)
+			      (- mythryl-paren-indent-level))
+			     ((eq p ?a)
+			      (cond
+			       ((looking-at "\\<also\\>")
+				(setcar pst t)
+				;;(setq li (* -1 mythryl-block-indent-level))
+				;;mythryl-block-indent-level
+				0)
+			       (t 0)))
+			     ((eq p ?c)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<case\\>")
+				(setcar pst t)
+				(mythryl-indent-skip-expression)
+				mythryl-case-indent-level)
+			       (t 0)))
+			     ((eq p ?f)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<fu?n\\>") (setcar pat t) 0)
+			       ((looking-at "\\<fi\\>") (- mythryl-if-indent-level))
+			       (t 0)))
+			     ((eq p ?e)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<end\\>") (- mythryl-block-indent-level))
+			       ((looking-at "\\<else\\>")
+				(setcar pst t)
+				(setq li (* -2 mythryl-if-indent-level))
+				mythryl-if-indent-level)
+			       ((looking-at "\\<elif\\>")
+				(setcar pst t)
+				(mythryl-indent-skip-expression)
+				(setq li (* -2 mythryl-if-indent-level))
+				mythryl-if-indent-level)
+			       ((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
+			       ((looking-at "\\<except\\>")
+				(setcar pst t)
+				(setcar pat t) 0)
+			       (t 0)))
+			     ((eq p ?h)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<herein\\>") (setcar pst t) (setq li (* -2 mythryl-block-indent-level)) mythryl-block-indent-level)
+			       (t 0)))
+			     ((eq p ?i)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<if\\>")
+				(setcar pst t)
+				(mythryl-indent-skip-expression)
+				mythryl-if-indent-level)
+			       (t 0)))
+			     ((eq p ?p)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<package\\>") (setcar pkg t) 0)
+			       (t 0)))
+			     ((eq p ?s)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<stipulate\\>") (setcar pst t) mythryl-block-indent-level)
+			       (t 0)))
+			     ((eq p ?w)
+			      (setcar pst nil)
+			      (cond
+			       ((looking-at "\\<where\\>")
+				(if (car pkg) 0
+				  (setcar pst t)
+				  (setq li (* -1 mythryl-block-indent-level))
+				  mythryl-block-indent-level
+				  ))
+			       (t 0)))
+			     (t (setcar pst nil) 0)
+			     )))
+		 (goto-char mae))))
+	   (goto-char (point-max)) (widen)
+	   (setq b (car b))
+	   (backward-to-indentation 0)
+	   (setq i (+ (if (or (car fst) (car pst)) 0 4) li b i))
+	   (unless (= oi i)
+	     (delete-region
+	      (point)
+	      (save-excursion (beginning-of-line) (point)))
+	     (indent-to i)
+	     (setq mp (point)))))
+       (if (and mp (< (point) mp)) (goto-char mp))))))
 
 (defcustom mythryl-auto-indent t
   "Whether to use automatic indentation in `mythryl-mode'"
