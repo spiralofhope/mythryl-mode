@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.2.0
+;; Version: 2.2.2
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -81,9 +81,9 @@
 ;; Rand in 2011 I decided to enlist as a maintainer.
 ;;					--Rev22, 2011-11-06
 
-;; v2.2.0 Fix electric keys support, improved indentation engine,
-;; added support for XEmacs (tested on version 21.4).
-;;					--Rev22, 2011-11-26
+;; v2.2.2 Fix electric keys support, improved indentation engine,
+;; XEmacs support (tested on version 21.4).
+;;					--Rev22, 2011-11-28
 
 ;;; Repositories:
 
@@ -205,7 +205,7 @@ This is a good place to put your preferred key bindings.")
 	(eval-when-compile
 	  (concat
 	   "\\(\\([]}); ]\\|"
-	   (regexp-opt (mapcar 'symbol-name '(end fi esac then herein elif else where)) 'words)
+	   (regexp-opt (mapcar 'symbol-name '(end fi esac then herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
 
@@ -237,7 +237,9 @@ This includes \"fun..end\", \"where..end\",
 \"except..end\", \"stipulate..herein..end\""
   :group 'mythryl-indent :type 'integer)
 
-(defun mythryl-bosp () ;; Go back to the Beginning of a Mythryl statement
+(defun mythryl-boms ()
+  "whether point is at the Beginning Of a Mythryl Statement"
+  (let ((closing-rgx ".*\\([;{]\\|also\\)[ \t]*$"))
   (save-excursion
     (while (progn
 	     (backward-to-indentation 1)
@@ -246,8 +248,8 @@ This includes \"fun..end\", \"where..end\",
 	(save-restriction
 	  (narrow-to-region (point-min) (match-beginning 1))
 	  (beginning-of-line 1)
-	  (looking-at ".*[;{][ \t]*$")) ; # blue
-      (looking-at ".*[;{][ \t]*$"))))
+	  (looking-at closing-rgx)) ; # blue
+      (looking-at closing-rgx)))))
 
 (defun mythryl-indent-skip-expression () ;; Return end of next mythryl expression
   (interactive)
@@ -277,7 +279,7 @@ This includes \"fun..end\", \"where..end\",
 			  (and (not (= mythryl-continued-line-indent-level 0))
 			       ;; continue if we are not on the beginning
 			       ;; of a block
-			       (not (mythryl-bosp))))
+			       (not (mythryl-boms))))
 		      (or (not p) (< (point) p))
 		      )
 		   (setq p (point))))
@@ -319,7 +321,7 @@ This includes \"fun..end\", \"where..end\",
 			(mapcar
 			 'symbol-name
 			 '(where end case esac if fi else elif
-				 stipulate herein except
+				 stipulate also herein except
 				 fun fn package))
 			'words)
 		       "\\|" mythryl-word-regexp
@@ -373,6 +375,14 @@ This includes \"fun..end\", \"where..end\",
 			    ((or (eq p ?\]) (eq p ?\)))
 			     (setcar pst nil)
 			     (- mythryl-paren-indent-level))
+			    ((eq p ?a)
+			     (cond
+			      ((looking-at "\\<also\\>")
+			       (setcar pst t)
+			       ;;(setq li (* -1 mythryl-block-indent-level))
+			       ;;mythryl-block-indent-level
+			       0)
+			      (t 0)))
 			    ((eq p ?c)
 			     (setcar pst nil)
 			     (cond
