@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.2.2
+;; Version: 2.2.3
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -60,12 +60,12 @@
 
 ;;; TODO
 
-;; + add mythryl-mode-map
 ;; + mythryl-interaction-mode
 ;; + support of outline
-;; + support more indentation styles
+;; + more indentation styles
 ;; + command (possibly tied to "electric keys")
 ;; + run emacs lint
+;; + improve indentation engine with syntax-table functions
 
 ;;; History:
 
@@ -81,7 +81,7 @@
 ;; Rand in 2011 I decided to enlist as a maintainer.
 ;;					--Rev22, 2011-11-06
 
-;; v2.2.2 Fix electric keys support, improved indentation engine,
+;; v2.2 Fixed electric keys support, improved indentation engine,
 ;; XEmacs support (tested on version 21.4).
 ;;					--Rev22, 2011-11-28
 
@@ -108,9 +108,9 @@
 (defvar mythryl-mode-syntax-table
   (let ((st (make-syntax-table)))
     (modify-syntax-entry ?\# "< b" st)
-    ;(modify-syntax-entry ?\! ". 2b" st)
-    ;(modify-syntax-entry ?\  "- 2b" st)
-    ;(modify-syntax-entry ?\t "- 2b" st)
+    ;; (modify-syntax-entry ?\! ". 2b" st)
+    ;; (modify-syntax-entry ?\  "- 2b" st)
+    ;; (modify-syntax-entry ?\t "- 2b" st)
     (modify-syntax-entry ?\n "> b" st)
     (modify-syntax-entry ?\/ ". 14" st)
     (modify-syntax-entry ?\* ". 23" st)
@@ -185,6 +185,8 @@ This is a bold character by default."
 It matches numbers identifiers, package names, operators, types, apis, type
 constructors, pattern identifiers.")
 
+(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/ \t]\\|#[^# ]\\|/[^*]\\)")
+
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
 This is a good place to put your preferred key bindings.")
@@ -237,20 +239,6 @@ This includes \"fun..end\", \"where..end\",
 \"except..end\", \"stipulate..herein..end\""
   :group 'mythryl-indent :type 'integer)
 
-(defun mythryl-boms ()
-  "whether point is at the Beginning Of a Mythryl Statement"
-  (let ((closing-rgx ".*\\([;{]\\|\\<also\\>\\)[ \t]*$"))
-    (save-excursion
-      (while (progn
-	       (backward-to-indentation 1)
-	       (looking-at "\\(#.*\\|/[*].*\\)?\n")) t)
-      (if (looking-at ".*\\(# \\)") ; # blue
-	  (save-restriction
-	    (narrow-to-region (point-min) (match-beginning 1))
-	    (beginning-of-line 1)
-	    (looking-at closing-rgx)) ; # blue
-	(looking-at closing-rgx)))))
-
 (defun mythryl-indent-skip-expression () ;; Return end of next mythryl expression
   (save-excursion
     (goto-char (match-end 0))
@@ -274,12 +262,15 @@ This includes \"fun..end\", \"where..end\",
 	     (let ((i
 		    (save-excursion
 		      ;; Go back until we find a non-empty line
-		      (while (progn
-			       (backward-to-indentation 1)
-			       (looking-at "\n")) t)
-		      
-		      ;; If it is a comment, align to it
-		      (and (looking-at "#") (current-indentation)))))
+		      (and
+		       (re-search-backward
+			"^[ \t]*\\([^/ \t]\\|/[^*]\\)"
+			nil t)
+		       ;; If it is a comment, align to it
+		       (progn
+			 (goto-char (match-beginning 1))
+			 (looking-at "#"))
+		       (current-indentation)))))
 	       (and i
 		    (or (= c i)
 			(progn
@@ -288,9 +279,9 @@ This includes \"fun..end\", \"where..end\",
 			   (save-excursion
 			     (beginning-of-line)
 			     (point)))
-			  (indent-to (- i c))
+			  (indent-to i)
 			  t)))))))))
-		     
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -302,21 +293,36 @@ This includes \"fun..end\", \"where..end\",
      (widen)
      (let ((oi (current-indentation)) ;; Original indentation
 	   (b (save-excursion
-		(let (p)
-		  (while
-		      ;; Look for a previous line we can anchor the indentation to
-		      (and
-		       (backward-to-indentation 1)
-		       (or (looking-at "=*[ \t]*$")
-			   (looking-at mythryl-comment-line-regexp) ;; Skip comments
-			   (looking-at "\\<where\\>") ;; 'where' may be after a package or a code block
-			   (and (not (= mythryl-continued-line-indent-level 0))
-				;; continue if we are not on the beginning
-				;; of a block
-				(not (mythryl-boms))))
-		       (or (not p) (< (point) p))
-		       )
-		    (setq p (point))))
+		;; Look for a previous line we can anchor the indentation to
+		(end-of-line 0)
+		(let ((front (point)))
+		  (if (= mythryl-continued-line-indent-level 0)
+		      (if (re-search-backward
+			   (eval-when-compile
+			     (concat "^[ \t]*\\(=\\|" mythryl-comment-line-regexp "\\|\\<where\\>\\)"))  ;; 'where' may be after a package or a code block
+			   nil t)
+			  (goto-char (match-beginning 1))
+			(goto-char (point-min)))
+		    (if (re-search-backward
+			 mythryl-code-line-regexp
+			 nil t)
+			(progn
+			  (setq front (match-beginning 1))
+			  (if (re-search-backward
+			       ".*\\([;{]\\|\\<also\\>\\)[ \t]*$"
+			       nil t)
+			      (progn
+				(goto-char (match-end 0))
+				(if (re-search-forward
+				     mythryl-code-line-regexp
+				     front t)
+				    (goto-char (match-beginning 1))
+				  (beginning-of-line 2)
+				  (forward-to-indentation 0)))
+			    (goto-char (point-min))
+			    (forward-to-indentation 0)))
+		      (goto-char (point-min))
+		      (forward-to-indentation 0))))
 		(mythryl-skip-closing)
 		(cons (current-indentation)
 		      (point))))
@@ -644,7 +650,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 (defun run-mythryl ()
   "Runs mythryl's interactive compiler."
   (interactive)
-  (switch-to-buffer (make-comint "mythryl" "mythryld"))
+  (switch-to-buffer (make-comint "Mythryl session" "mythryld"))
   (mythryl-font-lock-mode 1)
   )
 
