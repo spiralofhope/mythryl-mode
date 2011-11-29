@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.3.0
+;; Version: 2.3.1
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -186,7 +186,7 @@ This is a bold character by default."
 It matches numbers identifiers, package names, operators, types, apis, type
 constructors, pattern identifiers.")
 
-(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/ \t]\\|#[^# ]\\|/[^*]\\)")
+(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/ \t\n]\\|#[^# \n]\\|/[^*\n]\\)")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -316,7 +316,7 @@ This includes \"fun..end\", \"where..end\",
 				(goto-char (match-end 0))
 				(if (re-search-forward
 				     mythryl-code-line-regexp
-				     front t)
+				     (+ front 1) t)
 				    (goto-char (match-beginning 1))
 				  (beginning-of-line 2)
 				  (forward-to-indentation 0)))
