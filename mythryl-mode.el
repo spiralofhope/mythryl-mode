@@ -60,6 +60,7 @@
 
 ;;; TODO
 
+;; + indent records differently from braced statements
 ;; + mythryl-interaction-mode
 ;; + support of outline
 ;; + more indentation styles
