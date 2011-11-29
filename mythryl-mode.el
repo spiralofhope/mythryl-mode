@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.3.1
+;; Version: 2.3.2
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -221,8 +221,8 @@ This is a good place to put your preferred key bindings.")
 (defcustom mythryl-case-indent-level 5
   "Indentation level for case blocks."
   :group 'mythryl-indent :type 'integer)
-(defcustom mythryl-brace-indent-level 3
-  "Indentation level for braced blacks."
+(defcustom mythryl-brace-indent-level 4
+  "Indentation level for braced blocks."
   :group 'mythryl-indent :type 'integer)
 (defcustom mythryl-paren-indent-level 2
   "Indentation level for open parenthesis"
