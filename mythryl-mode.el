@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.3.2
+;; Version: 2.4.0
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -218,27 +218,36 @@ This is a good place to put your preferred key bindings.")
 (defcustom mythryl-if-indent-level 5
   "Indentation level for if blocks."
   :group 'mythryl-indent :type 'integer)
+
 (defcustom mythryl-case-indent-level 5
   "Indentation level for case blocks."
   :group 'mythryl-indent :type 'integer)
+
 (defcustom mythryl-brace-indent-level 4
   "Indentation level for braced blocks."
   :group 'mythryl-indent :type 'integer)
+
 (defcustom mythryl-paren-indent-level 2
   "Indentation level for open parenthesis"
   :group 'mythryl-indent :type 'integer)
+
 (defcustom mythryl-block-indent-level 4
   "Indentation level for other blocks.
 
 This includes \"fun..end\", \"where..end\",
 \"except..end\", \"stipulate..herein..end\""
   :group 'mythryl-indent :type 'integer)
+
 (defcustom mythryl-continued-line-indent-level 4
   "Indentation level for continued lines of statements.
 
 This includes \"fun..end\", \"where..end\",
 \"except..end\", \"stipulate..herein..end\""
   :group 'mythryl-indent :type 'integer)
+
+(defcustom mythryl-continued-line-indent-braced-blocks t
+  "Whether to additionally indent braced blocks in continued lines"
+  :group 'mythryl-indent :type 'bool)
 
 (defun mythryl-indent-skip-expression () ;; Return end of next mythryl expression
   (save-excursion
@@ -310,7 +319,9 @@ This includes \"fun..end\", \"where..end\",
 			(progn
 			  (setq front (match-beginning 1))
 			  (if (re-search-backward
-			       ".*\\([;{]\\|\\<also\\>\\)[ \t]*$"
+			       (if mythryl-continued-line-indent-braced-blocks
+			       ".*\\(;\\|\\<also\\>\\)[ \t]*$"
+			       ".*\\([;{]\\|\\<also\\>\\)[ \t]*$")
 			       nil t)
 			      (progn
 				(goto-char (match-end 0))
@@ -401,6 +412,8 @@ This includes \"fun..end\", \"where..end\",
 				    pst (cons t pst)
 				    fst (cons nil fst)
 				    )
+			      (unless mythryl-continued-line-indent-braced-blocks
+				(setq li (* -2 mythryl-brace-indent-level)))
 			      mythryl-brace-indent-level)
 			     ((eq p ?\})
 			      (setq pat (or (cdr pat) '(nil))
@@ -408,7 +421,8 @@ This includes \"fun..end\", \"where..end\",
 				    pst (or (cdr pst) '(nil))
 				    fst (or (cdr fst) '(nil))
 				    )
-			      ;;(setcar pst nil)
+			      (when mythryl-continued-line-indent-braced-blocks
+				(setcar pst t))
 			      (- mythryl-brace-indent-level))
 			     ((or (eq p ?\[) (eq p ?\())
 			      (setcar pst nil)
