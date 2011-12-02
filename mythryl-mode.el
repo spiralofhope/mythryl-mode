@@ -630,10 +630,10 @@ Currently, \";\" and \"}\" are defined as electric keys."
   (set (make-local-variable 'compile-command) "mythryld ")
 
   (set (make-local-variable 'comment-use-syntax) t)
-  ;; (set (make-local-variable 'comment-style) 'plain) ;; Will configuring this help?
+  ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting up this up help?
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]\\|$\\)")
-  (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how would it help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
+  (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how it would help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
   (set (make-local-variable 'comment-end) "") ;; "*/")
 
   (set (make-local-variable 'font-lock-comment-end-skip) "[\t ]*[*]+/")
