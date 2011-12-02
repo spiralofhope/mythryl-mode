@@ -637,7 +637,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 ;;   stip -> stipulate _; herein ...; end;
 ;;    cas -> case (_) ... => ...; esac;
 
-(when (require 'abbrev nil t)
+(when (condition-case nil (progn (require 'abbrev) t) (error nil))
   (define-abbrev-table 'mythryl-mode-abbrev-table '())
   
   (defun mythryl-insert-ifelse ()
