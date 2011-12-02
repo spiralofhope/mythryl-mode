@@ -312,7 +312,11 @@ This includes \"fun..end\", \"where..end\",
 		  (if (= mythryl-continued-line-indent-level 0)
 		      (if (re-search-backward
 			   (eval-when-compile
-			     (concat "^[ \t]*\\(=\\|" mythryl-comment-line-regexp "\\|\\<where\\>\\)"))  ;; 'where' may be after a package or a code block
+			     (concat
+			      "^[ \t]*\\(=\\|"
+			      "#\\($\\|[\t #!]\\).*" ;; mythryl-comment-line-regexp
+			      "\\|\\<where\\>\\)"
+			      ))  ;; 'where' may be after a package or a code block
 			   nil t)
 			  (goto-char (match-beginning 1))
 			(goto-char (point-min)))
