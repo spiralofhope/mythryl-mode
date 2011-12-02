@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.4
+;; Version: 2.4.5
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -100,6 +100,7 @@
 ;; as of August 2009, the instructions on that page for accessing
 ;; the svn repository were incorrect.
 
+;;;###autoload
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
 
@@ -682,6 +683,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 ;;    elif (_) ...;
 
 ;; define-derived-mode
+
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
@@ -729,7 +731,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 ;;;###autoload
 (defun run-mythryl ()
-  "Runs mythryl's interactive compiler."
+  "Start an interactive Mythryl session."
   (interactive)
   (switch-to-buffer (make-comint "Mythryl session" "mythryld"))
   (mythryl-font-lock-mode 1)
