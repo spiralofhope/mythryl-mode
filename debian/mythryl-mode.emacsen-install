@@ -1,32 +1,34 @@
 #!/bin/sh
 # /usr/lib/emacsen-common/packages/install/mythryl-mode
 
-set -e
-
 FLAVOR=$1
-echo install/mythryl-mode: Handling install of emacsen flavor ${FLAVOR}
+PACKAGE=mythryl-mode
 
-byte_compile_options="-batch -f batch-byte-compile"
-el_files="mythryl-mode.el" 
-el_dir=/usr/share/emacs/site-lisp/mythryl-mode/
-elc_dir=/usr/share/${FLAVOR}/site-lisp/mythryl-mode/
+if [ ${FLAVOR} = emacs ]; then exit 0; fi
 
-if [ ${FLAVOR} != emacs ]
-then
-  echo install/mythryl-mode: byte-compiling for ${FLAVOR}
+echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
 
-  [ -d ${elc_dir} ] || mkdir ${elc_dir}
-
-  # Copy the temp .el files
-  (cd ${el_dir} && cp ${el_files} ${elc_dir})
-
-  # Byte compile them
-  (cd ${elc_dir} \
-   && ${FLAVOR} ${byte_compile_options} ${el_files} 2> /dev/null)
-
-  # remove the redundant .el files
-  # presumes that any .el files in the <flavor> dir are trash.
-  rm ${elc_dir}/*.el
+FLAVORTEST=`echo $FLAVOR | cut -c-6`
+if [ ${FLAVORTEST} = xemacs ] ; then
+    SITEFLAG="-no-site-file"
+else
+    SITEFLAG="--no-site-file"
 fi
+FLAGS="${SITEFLAG} -q -batch -l path.el -f batch-byte-compile"
 
-exit 0;
+ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
+ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+
+install -m 755 -d ${ELCDIR}
+cd ${ELDIR}
+FILES=`echo *.el`
+cp ${FILES} ${ELCDIR}
+cd ${ELCDIR}
+
+cat << EOF > path.el
+(setq load-path (cons "." load-path) byte-compile-warnings nil)
+EOF
+${FLAVOR} ${FLAGS} ${FILES}
+rm -f *.el path.el
+
+exit 0

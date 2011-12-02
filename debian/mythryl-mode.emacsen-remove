@@ -1,19 +1,10 @@
 #!/bin/sh
 # /usr/lib/emacsen-common/packages/remove/mythryl-mode
 
-set -e
-
 FLAVOR=$1
-elc_dir=/usr/share/${FLAVOR}/site-lisp/mythryl-mode
+PACKAGE=mythryl-mode
 
-echo remove/mythryl-mode: Handling removal of emacsen flavor ${FLAVOR}
-
-if [ ${FLAVOR} != emacs ]
-then
-  echo emacsen-common: purging byte-compiled files for ${FLAVOR}
-  rm -f ${elc_dir}/*.elc
-  rm -f ${elc_dir}/*.el         # Install might have been interrupted.
-  rmdir --ignore-fail-on-non-empty ${elc_dir}
+if [ ${FLAVOR} != emacs ]; then
+    echo remove/${PACKAGE}: purging byte-compiled files for ${FLAVOR}
+    rm -rf /usr/share/${FLAVOR}/site-lisp/${PACKAGE}
 fi
-
-exit 0;
