@@ -4,7 +4,7 @@
 set -e
 
 FLAVOR=$1
-echo install/foo: Handling install of emacsen flavor ${FLAVOR}
+echo install/mythryl-mode: Handling install of emacsen flavor ${FLAVOR}
 
 byte_compile_options="-batch -f batch-byte-compile"
 el_files="mythryl-mode.el" 
@@ -13,7 +13,7 @@ elc_dir=/usr/share/${FLAVOR}/site-lisp/mythryl-mode/
 
 if [ ${FLAVOR} != emacs ]
 then
-  echo install/foo: byte-compiling for ${FLAVOR}
+  echo install/mythryl-mode: byte-compiling for ${FLAVOR}
 
   [ -d ${elc_dir} ] || mkdir ${elc_dir}
 

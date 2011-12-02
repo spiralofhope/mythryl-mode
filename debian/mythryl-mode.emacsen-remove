@@ -4,9 +4,9 @@
 set -e
 
 FLAVOR=$1
-elc_dir=/usr/share/${FLAVOR}/site-lisp/foo
+elc_dir=/usr/share/${FLAVOR}/site-lisp/mythryl-mode
 
-echo remove/foo: Handling removal of emacsen flavor ${FLAVOR}
+echo remove/mythryl-mode: Handling removal of emacsen flavor ${FLAVOR}
 
 if [ ${FLAVOR} != emacs ]
 then
