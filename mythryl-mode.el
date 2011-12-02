@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.1
+;; Version: 2.4.3
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -166,7 +166,7 @@ This is a bold character by default."
 
 (defconst mythryl-comment-line-regexp
   ;;"#\\(\n\\|\\($\\|[ #!]\\).*\\)"
-  "#\\($\\|[ #!]\\).*"
+  "#\\($\\|[\t #!]\\).*"
   )
 
 (defconst mythryl-comment-regexp
