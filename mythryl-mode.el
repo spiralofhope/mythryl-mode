@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.3
+;; Version: 2.4.4
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -322,8 +322,8 @@ This includes \"fun..end\", \"where..end\",
 			  (setq front (match-beginning 1))
 			  (if (re-search-backward
 			       (if mythryl-continued-line-indent-braced-blocks
-			       ".*\\(;\\|\\<also\\>\\)[ \t]*$"
-			       ".*\\([;{]\\|\\<also\\>\\)[ \t]*$")
+			       "^[^#\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
+			       "^[^#\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$")
 			       nil t)
 			      (progn
 				(goto-char (match-end 0))
