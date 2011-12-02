@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.0
+;; Version: 2.4.1
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -105,6 +105,8 @@
 
 (require 'custom)
 (require 'font-lock)
+(require 'derived)
+(require 'abbrev)
 
 (defvar mythryl-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -249,12 +251,12 @@ This includes \"fun..end\", \"where..end\",
   "Whether to additionally indent braced blocks in continued lines"
   :group 'mythryl-indent :type 'bool)
 
-(defun mythryl-indent-skip-expression () ;; Return end of next mythryl expression
+(defun mythryl-end-of-next-expression () ;; Return end of next mythryl expression
   (save-excursion
     (goto-char (match-end 0))
     (condition-case nil
-	(progn (forward-sexp 1) (setq mae (point)))
-      (error t))))
+	(progn (forward-sexp 1) (point))
+      (error nil))))
 
 (defun mythryl-indent-comment-2 ()
   (save-excursion
@@ -342,7 +344,16 @@ This includes \"fun..end\", \"where..end\",
 	   )
        (save-excursion
 	 (let ((bl (cdr b))
-	       (i 0) ;; accumulated indentation level
+	       (i ;; accumulated indentation level
+		(save-excursion
+		  (goto-char (cdr b))
+		  (if (looking-at "\\<\\(else\\|elif\\|herein\\)\\>")
+		      (let ((c (char-after (point))))
+			(cond
+			 ((eq c ?e)
+			  mythryl-if-indent-level)
+			 (t mythryl-block-indent-level)))
+		    0)))
 	       (li 0) ;; line-specific indentation level
 	       
 	       ;; car of the stack is t when we are inside a pattern
@@ -443,7 +454,7 @@ This includes \"fun..end\", \"where..end\",
 			      (cond
 			       ((looking-at "\\<case\\>")
 				(setcar pst t)
-				(mythryl-indent-skip-expression)
+				(setq mae (or (mythryl-end-of-next-expression) mae))
 				mythryl-case-indent-level)
 			       (t 0)))
 			     ((eq p ?f)
@@ -458,13 +469,13 @@ This includes \"fun..end\", \"where..end\",
 			       ((looking-at "\\<end\\>") (- mythryl-block-indent-level))
 			       ((looking-at "\\<else\\>")
 				(setcar pst t)
-				(setq li (* -2 mythryl-if-indent-level))
-				mythryl-if-indent-level)
+				(setq li (* -1 mythryl-if-indent-level))
+				0)
 			       ((looking-at "\\<elif\\>")
 				(setcar pst t)
-				(mythryl-indent-skip-expression)
-				(setq li (* -2 mythryl-if-indent-level))
-				mythryl-if-indent-level)
+				(setq mae (or (mythryl-end-of-next-expression) mae))
+				(setq li (* -1 mythryl-if-indent-level))
+				0)
 			       ((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
 			       ((looking-at "\\<except\\>")
 				(setcar pst t)
@@ -473,14 +484,14 @@ This includes \"fun..end\", \"where..end\",
 			     ((eq p ?h)
 			      (setcar pst nil)
 			      (cond
-			       ((looking-at "\\<herein\\>") (setcar pst t) (setq li (* -2 mythryl-block-indent-level)) mythryl-block-indent-level)
+			       ((looking-at "\\<herein\\>") (setcar pst t) (setq li (* -1 mythryl-block-indent-level)) 0)
 			       (t 0)))
 			     ((eq p ?i)
 			      (setcar pst nil)
 			      (cond
 			       ((looking-at "\\<if\\>")
 				(setcar pst t)
-				(mythryl-indent-skip-expression)
+				(setq mae (or (mythryl-end-of-next-expression) mae))
 				mythryl-if-indent-level)
 			       (t 0)))
 			     ((eq p ?p)
@@ -616,12 +627,67 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	 (list 0 mythryl-mode-structure-face))
    ))
 
+;; Simple abbrevation table
+
+;;   ifel -> if (_) ...; else ...; fi;
+;;   stip -> stipulate _; herein ...; end;
+;;    cas -> case (_) ... => ...; esac;
+
+(define-abbrev-table 'mythryl-mode-abbrev-table '())
+
+(defun mythryl-insert-ifelse ()
+  "Generate if (...) ... else ... fi;"
+  (interactive)
+  (let ((s (point)))
+    (let ((e
+	   (progn
+	     (insert "if ()\n \nelse\n \nfi;\n")
+	     (point))))
+      (goto-char (+ s 4))
+      (indent-region s e))))
+(put 'mythryl-insert-ifelse 'no-self-insert t)
+
+(defun mythryl-insert-stipulate ()
+  "Generate an empty stipulate ... herein ... end; block"
+  (interactive)
+  (let ((s (point)))
+    (let ((e
+	   (progn
+	     (insert "stipulate\n \nherein\n \nend;")
+	     (point))))
+      (goto-char (+ s 9))
+      (indent-region s e))))
+(put 'mythryl-insert-stipulate 'no-self-insert t)
+
+(defun mythryl-insert-case ()
+  "Generate case (...) ... => ...; esac;"
+  (interactive)
+  (let ((s (point)))
+    (let ((e
+	   (progn
+	     (insert "case ()\n => ;\nesac;")
+	     (point))))
+      (goto-char (+ s 6))
+      (indent-region s e))))
+(put 'mythryl-insert-case 'no-self-insert t)
+
+(define-abbrev mythryl-mode-abbrev-table "ifel" "" 'mythryl-insert-ifelse)
+(define-abbrev mythryl-mode-abbrev-table "stip" "" 'mythryl-insert-stipulate)
+(define-abbrev mythryl-mode-abbrev-table "cas" "" 'mythryl-insert-case)
+
+;; Maybe add more templates like:
+;;    pkg -> package _;
+
+;;    if (_) ...; fi;
+;;    elif (_) ...;
+
+;; define-derived-mode
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
   "Major mode for the Mythryl programming language."
   :group 'mythryl
-  ;; :abbrev-table (let ((a (make-abbrev-table)))
+  :abbrev-table mythryl-mode-abbrev-table
   :syntax-table mythryl-mode-syntax-table
   (when mythryl-electric-keys
     (define-key mythryl-mode-map ";" 'mythryl-electric-key))
