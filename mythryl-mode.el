@@ -188,7 +188,7 @@ This is a bold character by default."
 It matches numbers identifiers, package names, operators, types, apis, type
 constructors, pattern identifiers.")
 
-(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/ \t\n]\\|#[^# \n]\\|/[^*\n]\\)")
+(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/ \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
