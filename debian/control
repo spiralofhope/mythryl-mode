@@ -8,7 +8,7 @@ Homepage: https://github.com/rev22/mythryl-mode
 
 Package: mythryl-mode
 Architecture: all
-Depends: ${shlibs:Depends}, emacsen-common, ${misc:Depends}
+Depends: ${shlibs:Depends}, emacsen, ${misc:Depends}
 Enhances: mythryl
 Description: Emacs mode for editing Mythryl code
  This package provides emacs support for Mythryl code, including
