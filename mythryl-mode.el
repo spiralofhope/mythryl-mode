@@ -392,8 +392,8 @@ This includes \"fun..end\", \"where..end\",
 				  stipulate also herein except
 				  fun fn package))
 			 'words)
-			"\\|" mythryl-word-regexp
-			"\\|" mythryl-op-regexp
+			"\\|" "[A-Za-z0-9_']+" ;; mythryl-word-regexp
+			"\\|" "[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
 			"\\)"))
 		     nil t)
 	       (goto-char (match-beginning 0))
