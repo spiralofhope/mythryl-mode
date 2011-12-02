@@ -637,48 +637,47 @@ Currently, \";\" and \"}\" are defined as electric keys."
 ;;   stip -> stipulate _; herein ...; end;
 ;;    cas -> case (_) ... => ...; esac;
 
-(when (condition-case nil (progn (require 'abbrev) t) (error nil))
-  (define-abbrev-table 'mythryl-mode-abbrev-table '())
-  
-  (defun mythryl-insert-ifelse ()
-    "Generate if (...) ... else ... fi;"
-    (interactive)
-    (let ((s (point)))
-      (let ((e
-	     (progn
-	       (insert "if ()\n \nelse\n \nfi;\n")
-	       (point))))
-	(goto-char (+ s 4))
-	(indent-region s e))))
-  (put 'mythryl-insert-ifelse 'no-self-insert t)
-  
-  (defun mythryl-insert-stipulate ()
-    "Generate an empty stipulate ... herein ... end; block"
-    (interactive)
-    (let ((s (point)))
-      (let ((e
-	     (progn
-	       (insert "stipulate\n \nherein\n \nend;")
-	       (point))))
-	(goto-char (+ s 9))
-	(indent-region s e))))
-  (put 'mythryl-insert-stipulate 'no-self-insert t)
-  
-  (defun mythryl-insert-case ()
-    "Generate case (...) ... => ...; esac;"
-    (interactive)
-    (let ((s (point)))
-      (let ((e
-	     (progn
-	       (insert "case ()\n => ;\nesac;")
-	       (point))))
-	(goto-char (+ s 6))
-	(indent-region s e))))
-  (put 'mythryl-insert-case 'no-self-insert t)
-  
-  (define-abbrev mythryl-mode-abbrev-table "ifel" "" 'mythryl-insert-ifelse)
-  (define-abbrev mythryl-mode-abbrev-table "stip" "" 'mythryl-insert-stipulate)
-  (define-abbrev mythryl-mode-abbrev-table "cas" "" 'mythryl-insert-case))
+(define-abbrev-table 'mythryl-mode-abbrev-table '())
+
+(defun mythryl-insert-ifelse ()
+  "Generate if (...) ... else ... fi;"
+  (interactive)
+  (let ((s (point)))
+    (let ((e
+	   (progn
+	     (insert "if ()\n \nelse\n \nfi;\n")
+	     (point))))
+      (goto-char (+ s 4))
+      (indent-region s e))))
+(put 'mythryl-insert-ifelse 'no-self-insert t)
+
+(defun mythryl-insert-stipulate ()
+  "Generate an empty stipulate ... herein ... end; block"
+  (interactive)
+  (let ((s (point)))
+    (let ((e
+	   (progn
+	     (insert "stipulate\n \nherein\n \nend;")
+	     (point))))
+      (goto-char (+ s 9))
+      (indent-region s e))))
+(put 'mythryl-insert-stipulate 'no-self-insert t)
+
+(defun mythryl-insert-case ()
+  "Generate case (...) ... => ...; esac;"
+  (interactive)
+  (let ((s (point)))
+    (let ((e
+	   (progn
+	     (insert "case ()\n => ;\nesac;")
+	     (point))))
+      (goto-char (+ s 6))
+      (indent-region s e))))
+(put 'mythryl-insert-case 'no-self-insert t)
+
+(define-abbrev mythryl-mode-abbrev-table "ifel" "" 'mythryl-insert-ifelse)
+(define-abbrev mythryl-mode-abbrev-table "stip" "" 'mythryl-insert-stipulate)
+(define-abbrev mythryl-mode-abbrev-table "cas" "" 'mythryl-insert-case)
 
 ;; Maybe add more templates like:
 ;;    pkg -> package _;
@@ -693,7 +692,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
   "Mythryl"
   "Major mode for the Mythryl programming language."
   :group 'mythryl
-  :abbrev-table (and (boundp 'mythryl-mode-abbrev-table) (eval 'mythryl-mode-abbrev-table))
+  :abbrev-table mythryl-mode-abbrev-table
   :syntax-table mythryl-mode-syntax-table
   (when mythryl-electric-keys
     (define-key mythryl-mode-map ";" 'mythryl-electric-key))
