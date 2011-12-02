@@ -10,6 +10,23 @@ Mythryl is a safe, functional programming language, derived by Cynbe
 ru Taren from SML/NJ, but featuring a clear, more programmer-friendly
 syntax.  See http://mythryl.org for more.
 
+
+Usage
+-----
+
+Activate mythryl-mode for an Emacs buffer:
+
+  M-x mythryl-mode
+
+Execute an interactive Mythryl session:
+  
+  M-x run-mythryl
+
+Customize indentation and fontification of Mythryl code:
+
+  M-x customize-group mythryl
+
+
 Installation
 ------------
 
@@ -21,18 +38,19 @@ insert the expression:
 in your .emacs file.
 
 Other useful lines for your .emacs (to automatically activate
-mythryl-mode)
+mythryl-mode for .pkg .api and .mythryl files)
 
- ;; for .pkg and .api files
- (setq auto-mode-alist
-       (append '(("\\.pkg$" . mythryl-mode)
-                 ("\\.api$" . mythryl-mode))
-               auto-mode-alist))
+  ;; for .pkg and .api files
+  (setq auto-mode-alist
+        (append '(("\\.pkg$" . mythryl-mode)
+                  ("\\.api$" . mythryl-mode)
+                  ("\\.mythryl$" . mythryl-mode))
+                auto-mode-alist))
 
- ;; for scripts starting with #!/.../mythryl
- (setq interpreter-mode-alist
-       (append '(("mythryl" . mythryl-mode))
-               interpreter-mode-alist))
+  ;; for scripts starting with #!/.../mythryl
+  (setq interpreter-mode-alist
+        (append '(("mythryl" . mythryl-mode))
+                interpreter-mode-alist))
 
 Repositories
 ------------
