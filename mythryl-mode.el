@@ -693,7 +693,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
   "Mythryl"
   "Major mode for the Mythryl programming language."
   :group 'mythryl
-  :abbrev-table mythryl-mode-abbrev-table
+  :abbrev-table (and (boundp 'mythryl-mode-abbrev-table) (eval 'mythryl-mode-abbrev-table))
   :syntax-table mythryl-mode-syntax-table
   (when mythryl-electric-keys
     (define-key mythryl-mode-map ";" 'mythryl-electric-key))
