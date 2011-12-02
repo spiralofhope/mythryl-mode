@@ -1,0 +1,32 @@
+#!/bin/sh
+# /usr/lib/emacsen-common/packages/install/mythryl-mode
+
+set -e
+
+FLAVOR=$1
+echo install/foo: Handling install of emacsen flavor ${FLAVOR}
+
+byte_compile_options="-batch -f batch-byte-compile"
+el_files="mythryl-mode.el" 
+el_dir=/usr/share/emacs/site-lisp/mythryl-mode/
+elc_dir=/usr/share/${FLAVOR}/site-lisp/mythryl-mode/
+
+if [ ${FLAVOR} != emacs ]
+then
+  echo install/foo: byte-compiling for ${FLAVOR}
+
+  [ -d ${elc_dir} ] || mkdir ${elc_dir}
+
+  # Copy the temp .el files
+  (cd ${el_dir} && cp ${el_files} ${elc_dir})
+
+  # Byte compile them
+  (cd ${elc_dir} \
+   && ${FLAVOR} ${byte_compile_options} ${el_files} 2> /dev/null)
+
+  # remove the redundant .el files
+  # presumes that any .el files in the <flavor> dir are trash.
+  rm ${elc_dir}/*.el
+fi
+
+exit 0;

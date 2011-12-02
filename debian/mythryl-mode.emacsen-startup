@@ -1,0 +1,10 @@
+(autoload 'mythryl-mode "mythryl-mode" "Major mode for the Mythryl programming language." t)
+(autoload 'run-mythryl "mythryl-mode" "Start an interactive Mythyryl session." t)
+
+(setq auto-mode-alist
+      (append '(("\\.pkg$" . mythryl-mode)
+		("\\.api$" . mythryl-mode)
+		("\\.mythryl$" . mythryl-mode))
+	      auto-mode-alist))
+
+(add-hook 'mythryl-mode-hook 'turn-on-font-lock)
