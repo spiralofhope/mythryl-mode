@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Copyright (c) 2011 Michele Bini
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+amend=""
+
+if [ -n "$1" ]; then
+    if [ "$1" = "--rollback" ]; then
+	exec git reset --soft HEAD^
+    else
+	echo "Unknown option: $1"
+	exit 1
+    fi
+fi
+
+println() {
+    printf "%s
+" "$@"
+}
+
+commitmsg="$(git diff --staged debian/changelog|sed -n ":f; n; /^@@/ T g; b f; :g; n; s/^+//p; b g; q")"
+if [ -z "$commitmsg" ]; then
+   echo "No commit message was staged yet from debian/changelog"
+   exit 1;
+fi
+
+versiontag="$(println "$commitmsg"|sed -n "s/[^(]*(//; s/).*//; p; q")"
+git commit -m "$commitmsg"
+
+if println "$versiontag"|grep -q -e "[.]deb[0-9][0-9]*"; then
+    git tag $GITTAGOPTS -f -- "$versiontag"
+else
+   echo "No .debN signature in version tag: $versiontag; not recording tag."
+fi

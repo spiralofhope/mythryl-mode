@@ -3,3 +3,23 @@
 
 %:
 	dh $@
+
+# Maintainer's custom build recipes
+
+sources-nobackups:
+	find -name "*~.d" -exec xargs rm -r \;
+
+debuild-launchpad: sources-nobackups
+	debuild -i"\\.git" -I~.d -I.bash_history -I.git -S -sa
+
+dpkg-buildpackage:
+	dpkg-buildpackage -rfakeroot
+
+git-commit:
+	sh debian/git-commit
+
+git-push:
+	git push; git push --tags
+
+debrelease-launchpad:
+	debrelease --dput -S ppa:michele-bini/ppa-mbxxii

@@ -1,3 +1,16 @@
+mythryl-mode (2.4.6.deb4) lucid; urgency=low
+
+  * Release for Ubuntu Lucid.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 03 Dec 2011 14:33:04 +0100
+
+mythryl-mode (2.4.6.deb3) karmic; urgency=low
+
+  * debian/rules: Custom recipes for debuild, dpkg-buildpackage and git.
+  * debian/git-commit: Created
+  
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 03 Dec 2011 07:53:11 +0100
+
 mythryl-mode (2.4.6.deb1) unstable; urgency=low
 
   * Updated Debian Standards support to 3.9.1
