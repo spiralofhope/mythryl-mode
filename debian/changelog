@@ -1,7 +1,18 @@
-mythryl-mode (2.4.6-2) karmic; urgency=low
+mythryl-mode (2.4.6.deb1) unstable; urgency=low
+
+  * Updated Debian Standards support to 3.9.1
+  * debian/mythryl-mode.emacen-remove,
+    debian/mythryl-mode.emacsen-install: use set -e for sh scripts.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 03 Dec 2011 06:54:18 +0100
+
+mythryl-mode (2.4.6) karmic; urgency=low
 
   * Release for Ubuntu Karmic.
-  * New upstream version.
+  * Fix for XEmacs indentation, and abbrev-mode.
+  * Fixes for Debian packaging.
+  * Fixes for byte-compilation.
+  * Remove Debian revision numbering.
 
  -- Michele Bini <michele.bini@gmail.com>  Sat, 03 Dec 2011 05:44:23 +0100
 

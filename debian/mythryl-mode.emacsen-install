@@ -1,6 +1,8 @@
 #!/bin/sh
 # /usr/lib/emacsen-common/packages/install/mythryl-mode
 
+set -e
+
 FLAVOR=$1
 PACKAGE=mythryl-mode
 

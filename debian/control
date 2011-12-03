@@ -3,7 +3,7 @@ Section: editors
 Priority: optional
 Maintainer: Michele Bini <michele.bini@gmail.com>
 Build-Depends: debhelper (>= 7.0.50~)
-Standards-Version: 3.8.4
+Standards-Version: 3.9.1
 Homepage: https://github.com/rev22/mythryl-mode
 
 Package: mythryl-mode
