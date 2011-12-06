@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.6
+;; Version: 2.4.7
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -52,12 +52,6 @@
 ;;       (append '(("mythryl" . mythryl-mode))
 ;;               interpreter-mode-alist))
 
-;;; Known bugs:
-
-;; Trying to indent multi-line comments (and sometimes after them)
-;; leads to incorrect behaviour.
-;; Try: mythryl-7.110.58/src/lib/src/random.api
-
 ;;; TODO
 
 ;; + indent records differently from braced statements
@@ -85,6 +79,9 @@
 ;; v2.2 Fixed electric keys support, improved indentation engine,
 ;; XEmacs support (tested on version 21.4).
 ;;					--Rev22, 2011-11-28
+
+;; v2.4.7 Improved indentation within and after C-style block
+;; comments.				--Rev22, 2011-12-06
 
 ;;; Repositories:
 
@@ -164,14 +161,14 @@ Example: pkg1::pkg2::"
 This is a bold character by default."
   :group 'mythryl)
 
-(defconst mythryl-comment-line-regexp
-  ;;"#\\(\n\\|\\($\\|[ #!]\\).*\\)"
-  "#\\($\\|[\t #!]\\).*"
-  )
+(defconst mythryl-line-comment-regexp "#\\($\\|[\t #!]\\).*")
+(defconst mythryl-block-comment-regexp
+  "/[*]\\([^*]+\\|[*]+[^/*]+\\)*\\($\\|[*]+/\\)") ;; (re-search-forward mythryl-block-comment-regexp)
 
 (defconst mythryl-comment-regexp
-  ;; "\\(#\\($\\|[ #!]\\).*\\|/[*]\\([^*]\\|\\*[^/]\\)*[*]/\\)" ;; appears to be buggy
-  (concat "\\(" mythryl-comment-line-regexp "\\|/[*]+\\([^*/]+/*[*]*\\)*[*]/\\)"))
+  (concat "\\(" mythryl-line-comment-regexp
+	  "\\|" mythryl-block-comment-regexp
+	  "\\)"))
 
 (defconst mythryl-string-regexp "\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"")
 
@@ -188,7 +185,7 @@ This is a bold character by default."
 It matches numbers identifiers, package names, operators, types, apis, type
 constructors, pattern identifiers.")
 
-(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/ \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
+(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -258,41 +255,74 @@ This includes \"fun..end\", \"where..end\",
 	(progn (forward-sexp 1) (point))
       (error nil))))
 
-(defun mythryl-indent-comment-2 ()
+(defun mythryl-indent-comment-line ()
   (save-excursion
-    (and (forward-to-indentation 0)
-	 (looking-at "#")
-	 (if (looking-at "##")
-	     (progn
-	       (kill-region
-		(point)
-		(save-excursion
-		  (beginning-of-line)
-		  (point)))
-	       t)
-	   (let ((c (current-indentation)))
-	     (let ((i
-		    (save-excursion
-		      ;; Go back until we find a non-empty line
-		      (and
-		       (re-search-backward
-			"^[ \t]*\\([^/ \t]\\|/[^*]\\)"
-			nil t)
-		       ;; If it is a comment, align to it
-		       (progn
-			 (goto-char (match-beginning 1))
-			 (looking-at "#"))
-		       (current-indentation)))))
-	       (and i
-		    (or (= c i)
-			(progn
-			  (kill-region
-			   (point)
-			   (save-excursion
-			     (beginning-of-line)
-			     (point)))
-			  (indent-to i)
-			  t)))))))))
+    (and
+     (forward-to-indentation 0)
+     (cond
+      ((looking-at "/[*]") t) ;; indent freely first line of block comment
+      ((looking-at "*") ;; align to previous line
+       (let ((c (current-indentation)))
+	   (let ((i
+		  (save-excursion
+		    ;; Go back until we find a non-empty line
+		    (and
+		     (re-search-backward
+		      "^[ \t]*\\([^ \t]+\\)"
+		      nil t)
+		     ;; If it is a comment, align to it
+		     (progn
+		       (goto-char (match-beginning 1))
+		       (cond
+			((looking-at "[*]") (current-indentation))
+			((looking-at "\\(.*/\\)[*]")
+			 (+ (- (match-end 1) (match-beginning 1))
+			    (current-indentation)))
+			(t nil)
+			))))))
+	     (and i
+		  (or (= c i)
+		      (progn
+			(kill-region
+			 (point)
+			 (save-excursion
+			   (beginning-of-line)
+			   (point)))
+			(indent-to i)
+			t))))))
+      ((looking-at "#")
+       (if (looking-at "##")
+	   (progn
+	     (kill-region
+	      (point)
+	      (save-excursion
+		(beginning-of-line)
+		(point)))
+	     t)
+	 (let ((c (current-indentation)))
+	   (let ((i
+		  (save-excursion
+		    ;; Go back until we find a non-empty line
+		    (and
+		     (re-search-backward
+		      "^[ \t]*\\([^/ \t]\\|/[^*]\\)"
+		      nil t)
+		     ;; If it is a comment, align to it
+		     (progn
+		       (goto-char (match-beginning 1))
+		       (looking-at "#"))
+		     (current-indentation)))))
+	     (and i
+		  (or (= c i)
+		      (progn
+			(kill-region
+			 (point)
+			 (save-excursion
+			   (beginning-of-line)
+			   (point)))
+			(indent-to i)
+			t)))))))
+      (t nil)))))
 
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
@@ -300,7 +330,7 @@ This includes \"fun..end\", \"where..end\",
 (defun mythryl-indent-line ()
   (interactive)
   (or
-   (mythryl-indent-comment-2) ;; Indent comments starting with ##, and consecutive comment lines
+   (mythryl-indent-comment-line)
    (save-restriction
      (widen)
      (let ((oi (current-indentation)) ;; Original indentation
@@ -313,7 +343,7 @@ This includes \"fun..end\", \"where..end\",
 			   (eval-when-compile
 			     (concat
 			      "^[ \t]*\\(=\\|"
-			      "#\\($\\|[\t #!]\\).*" ;; mythryl-comment-line-regexp
+			      "#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
 			      "\\|\\<where\\>\\)"
 			      ))  ;; 'where' may be after a package or a code block
 			   nil t)
@@ -326,8 +356,8 @@ This includes \"fun..end\", \"where..end\",
 			  (setq front (match-beginning 1))
 			  (if (re-search-backward
 			       (if mythryl-continued-line-indent-braced-blocks
-			       "^[^#\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
-			       "^[^#\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$")
+			       "^[^#/*\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
+			       "^[^#/*\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$")
 			       nil t)
 			      (progn
 				(goto-char (match-end 0))
@@ -707,7 +737,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
   (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how it would help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
   (set (make-local-variable 'comment-end) "") ;; "*/")
 
-  (set (make-local-variable 'font-lock-comment-end-skip) "[\t ]*[*]+/")
+  (set (make-local-variable 'font-lock-comment-end-skip) comment-end-skip)
   (set (make-local-variable 'font-lock-syntactic-keywords)
        (list (list "#[^#! \t\n]" 0 "w")
 	     (list "[.][|/]/" 0 "\"")))
