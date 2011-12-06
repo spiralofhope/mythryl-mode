@@ -1,3 +1,9 @@
+mythryl-mode (2.4.7.deb5) lucid; urgency=low
+
+  * Improved indentation within and after C-style block comments.
+
+ -- Michele Bini <michele.bini@gmail.com>  Wed, 07 Dec 2011 00:20:12 +0100
+
 mythryl-mode (2.4.6.deb4) lucid; urgency=low
 
   * Release for Ubuntu Lucid.
