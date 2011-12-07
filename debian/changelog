@@ -1,3 +1,9 @@
+mythryl-mode (2.4.7.deb6) lucid; urgency=low
+
+  * Updated TODO and README.
+
+ -- Michele Bini <michele.bini@gmail.com>  Wed, 07 Dec 2011 01:29:17 +0100
+
 mythryl-mode (2.4.7.deb5) lucid; urgency=low
 
   * Improved indentation within and after C-style block comments.
