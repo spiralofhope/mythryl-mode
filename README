@@ -52,6 +52,11 @@ mythryl-mode for .pkg .api and .mythryl files)
         (append '(("mythryl" . mythryl-mode))
                 interpreter-mode-alist))
 
+
+Alternatively, installation via a Debian package is possible on
+compatible Linux distributions (see repository below)
+
+
 Repositories
 ------------
 
@@ -60,6 +65,9 @@ You can find versions of mythryl-mode at the following locations:
 http://github.com/rev22/mythryl-mode
 
 EmacsWiki: http://www.emacswiki.org/emacs/MythrylMode
+
+Debian package: https://launchpad.net/~michele-bini/+archive/ppa-mbxxii
+
 
 History
 -------

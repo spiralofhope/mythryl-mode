@@ -1,7 +1,5 @@
-Maybe create mythryl-extra.el, for my extra mythryl support.
+Maybe create mythryl-extras.el.
 
 Update mythryl-mode.el in EmacsWiki.
 
 Add NEWS file.
-
-Debfile distribution.
