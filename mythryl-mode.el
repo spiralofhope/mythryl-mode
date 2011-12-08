@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.8
+;; Version: 2.4.9
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -712,9 +712,9 @@ Currently, \";\" and \"}\" are defined as electric keys."
       (indent-region s e))))
 (put 'mythryl-insert-case 'no-self-insert t)
 
-(define-abbrev mythryl-mode-abbrev-table "ifel" "" 'mythryl-insert-ifelse)
-(define-abbrev mythryl-mode-abbrev-table "stip" "" 'mythryl-insert-stipulate)
-(define-abbrev mythryl-mode-abbrev-table "cas" "" 'mythryl-insert-case)
+(define-abbrev mythryl-mode-abbrev-table "ifel" "" (function mythryl-insert-ifelse))
+(define-abbrev mythryl-mode-abbrev-table "stip" "" (function mythryl-insert-stipulate))
+(define-abbrev mythryl-mode-abbrev-table "cas" "" (function mythryl-insert-case))
 
 ;; Maybe add more templates like:
 ;;    pkg -> package _;
@@ -732,9 +732,9 @@ Currently, \";\" and \"}\" are defined as electric keys."
   :abbrev-table mythryl-mode-abbrev-table
   :syntax-table mythryl-mode-syntax-table
   (when mythryl-electric-keys
-    (define-key mythryl-mode-map ";" 'mythryl-electric-key))
+    (define-key mythryl-mode-map ";" (function mythryl-electric-key)))
   (when mythryl-auto-indent
-    (set (make-local-variable 'indent-line-function) 'mythryl-indent-line))
+    (set (make-local-variable 'indent-line-function) (function mythryl-indent-line)))
   (set (make-local-variable 'compile-command) "mythryld ")
 
   (set (make-local-variable 'comment-use-syntax) t)
@@ -762,7 +762,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
       ;; SYNTAX-ALIST
       nil
       ;; SYNTAX-BEGIN
-      'mythryl-beginning-of-syntax
+      (function mythryl-beginning-of-syntax)
       ;; OTHER-VARS
       )))
   )
@@ -792,7 +792,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
       ;; SYNTAX-ALIST
       nil
       ;; SYNTAX-BEGIN
-      'beginning-of-line
+      (function beginning-of-line)
       ;; OTHER-VARS
       ))
     (set
