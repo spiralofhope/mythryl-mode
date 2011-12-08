@@ -13,7 +13,7 @@ debuild-launchpad: sources-nobackups
 	debuild -i"\\.git" -I~.d -I.bash_history -I.git -S -sa
 
 dpkg-buildpackage:
-	dpkg-buildpackage -rfakeroot
+	dpkg-buildpackage -i"(\\.git|.*~\\.d)" -I~.d -I.bash_history -I.git -rfakeroot
 
 git-commit:
 	sh debian/git-commit
