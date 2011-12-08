@@ -97,13 +97,14 @@
 ;; as of August 2009, the instructions on that page for accessing
 ;; the svn repository were incorrect.
 
-;;;###autoload
-(defgroup mythryl () "Group for customizing mythryl-mode"
-  :prefix "mythryl-" :group 'languages)
-
 (require 'custom)
 (require 'font-lock)
 (require 'derived)
+
+
+;;;###autoload
+(defgroup mythryl () "Group for customizing mythryl-mode"
+  :prefix "mythryl-" :group 'languages)
 
 (defvar mythryl-mode-syntax-table
   (let ((st (make-syntax-table)))
