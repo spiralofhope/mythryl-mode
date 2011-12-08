@@ -564,6 +564,12 @@ This includes \"fun..end\", \"where..end\",
 	     (setq mp (point)))))
        (if (and mp (< (point) mp)) (goto-char mp))))))
 
+;; Used by font-lock-defaults
+(defun mythryl-beginning-of-syntax ()
+  (beginning-of-line)
+  (while (looking-at "[ \t]*[#*]")
+    (beginning-of-line 0)))
+
 (defcustom mythryl-auto-indent t
   "Whether to use automatic indentation in `mythryl-mode'"
   :type 'boolean :group 'mythryl :group 'mythryl-indent)
@@ -756,7 +762,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
       ;; SYNTAX-ALIST
       nil
       ;; SYNTAX-BEGIN
-      'beginning-of-line
+      'mythryl-beginning-of-syntax
       ;; OTHER-VARS
       )))
   )
