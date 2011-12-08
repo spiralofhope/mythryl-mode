@@ -1,8 +1,8 @@
-mythryl-mode (2.4.8.deb8) unstable; urgency=low
+mythryl-mode (2.4.9.deb9) unstable; urgency=low
 
   * Added configuration options for Makefile.
 
- -- Michele Bini <michele.bini@gmail.com>  Thu, 08 Dec 2011 21:59:22 +0100
+ -- Michele Bini <michele.bini@gmail.com>  Thu, 08 Dec 2011 22:07:47 +0100
 
 mythryl-mode (2.4.8.deb7) unstable; urgency=low
 
