@@ -13,6 +13,7 @@ install:
 # Recipe for loaddefs.el, useful to create site-lisp autoload code
 loaddefs.el: $(ELFILE)
 	cat $(ELFILE) >$(ELFILE).tmp.el
+	echo >>$(ELFILE).tmp.el
 	echo ";;Local Variables: " >>$(ELFILE).tmp.el
 	echo ";;generated-autoload-file: \"loaddefs.el\"" >>$(ELFILE).tmp.el
 	echo ";;End: " >>$(ELFILE).tmp.el
