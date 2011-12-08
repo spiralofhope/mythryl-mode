@@ -1,3 +1,10 @@
+mythryl-mode (2.4.8.deb7) unstable; urgency=low
+
+  * Improve syntax-highlighting while editing by adding a
+  beginning-of-syntax function.
+
+ -- Michele Bini <michele.bini@gmail.com>  Thu, 08 Dec 2011 18:10:09 +0100
+
 mythryl-mode (2.4.7.deb6) lucid; urgency=low
 
   * Updated TODO and README.
