@@ -738,7 +738,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
   (set (make-local-variable 'compile-command) "mythryld ")
 
   (set (make-local-variable 'comment-use-syntax) t)
-  ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting up this up help?
+  ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]\\|$\\)")
   (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how it would help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
@@ -774,11 +774,6 @@ Currently, \";\" and \"}\" are defined as electric keys."
   "Start an interactive Mythryl session."
   (interactive)
   (switch-to-buffer (make-comint "Mythryl session" "mythryld"))
-  (mythryl-font-lock-mode 1)
-  )
-
-(defun mythryl-font-lock-mode (&rest r)
-  (interactive)
   (when mythryl-syntax-highlighting
     (set
      (make-local-variable 'font-lock-defaults)
