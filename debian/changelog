@@ -1,3 +1,9 @@
+mythryl-mode (2.4.11.deb10) lucid; urgency=low
+
+  * A fix for beginning-of-syntax function.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sun, 11 Dec 2011 15:43:51 +0100
+
 mythryl-mode (2.4.9.deb9) unstable; urgency=low
 
   * Added configuration options for Makefile.
