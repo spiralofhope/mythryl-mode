@@ -1,3 +1,9 @@
+mythryl-mode (2.4.13.deb12) lucid; urgency=low
+
+  * Fix for byte-compilation.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sun, 11 Dec 2011 20:57:04 +0100
+
 mythryl-mode (2.4.12.deb11) lucid; urgency=low
 
   * Improved indentation of multi-line records.
