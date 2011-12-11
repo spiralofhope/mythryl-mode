@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.10
+;; Version: 2.4.11
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -566,9 +566,8 @@ This includes \"fun..end\", \"where..end\",
 
 ;; Used by font-lock-defaults
 (defun mythryl-beginning-of-syntax ()
-  (beginning-of-line)
-  (while (looking-at "[ \t]*[#*]")
-    (beginning-of-line 0)))
+  (unless (re-search-backward mythryl-code-line-regexp nil t)
+    (beginning-of-line)))
 
 (defcustom mythryl-auto-indent t
   "Whether to use automatic indentation in `mythryl-mode'"
@@ -797,6 +796,6 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (set (make-local-variable 'font-lock-syntax-table)
 	 mythryl-mode-syntax-table)
     (set-syntax-table mythryl-mode-syntax-table)
-    (apply 'font-lock-mode r)))
+    (font-lock-mode t)))
 
 (provide 'mythryl-mode)
