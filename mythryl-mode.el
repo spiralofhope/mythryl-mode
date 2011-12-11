@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.11
+;; Version: 2.4.12
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -180,6 +180,9 @@ This is a bold character by default."
 
 (defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
+(defconst mythryl-record-name-regexp "[a-z_][a-z0-9_]+"
+  "Regexp matching Mythryl record names.")
+
 (defconst mythryl-word-regexp "[A-Za-z0-9_']+"
   "A regexp matching every kind of mythryl 'word'.
 
@@ -207,7 +210,7 @@ This is a good place to put your preferred key bindings.")
   (and (looking-at
 	(eval-when-compile
 	  (concat
-	   "\\(\\([]}); ]\\|"
+	   "\\(\\(" mythryl-record-name-regexp "[ \t\n]+=>\\|[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac then herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
@@ -414,7 +417,7 @@ This includes \"fun..end\", \"where..end\",
 		     (eval-when-compile
 		       (concat
 			"\\([][{}()\n\"#/;]\\|"
-			"[^\\!%&$+/:<=>?@~|*^-]\\(=>?\\)[^\\!%&$+/:<=>?@~|*^-]\\|"
+			"[^\\!%&$+/:<=>?@~|*^-]\\(=>?\\)\\([^\\!%&$+/:<=>?@~|*^-]\\|$\\)\\|"
 			(regexp-opt
 			 (mapcar
 			  'symbol-name
@@ -438,7 +441,10 @@ This includes \"fun..end\", \"where..end\",
 				  (if (car pat) (progn (setcar pat nil)
 						       (if (string= m "=>")
 							   mythryl-block-indent-level
-							 0)) 0))))
+							 0))
+				    (when (string= m "=>")
+				      (setcar pst t))
+				    0))))
 			     ((eq p ?\n) (setcar fst (car pst)) 0)
 			     ((or (eq p ?\")
 				  (eq p ?#)
