@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.14
+;; Version: 2.4.15
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -171,7 +171,13 @@ This is a bold character by default."
 	  "\\|" mythryl-block-comment-regexp
 	  "\\)"))
 
-(defconst mythryl-string-regexp "\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"")
+(defconst mythryl-character-constant-regexp "\\<[']\\([^']\\|\\.\\)[']")
+
+(defconst mythryl-string-regexp
+  (concat
+   "\\(\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"\\|"
+   mythryl-character-constant-regexp
+   "\\)"))
 
 (defconst mythryl-comment-or-string-regexp
   (concat "\\(" mythryl-comment-regexp
@@ -418,7 +424,7 @@ This includes \"fun..end\", \"where..end\",
 	     (while (re-search-forward
 		     (eval-when-compile
 		       (concat
-			"\\([][{}()\n\"#/;]\\|"
+			"\\([][{}()\n\"\'#/;]\\|"
 			"[^\\!%&$+/:<=>?@~|*^-]\\(=>?\\)\\([^\\!%&$+/:<=>?@~|*^-]\\|$\\)\\|"
 			(regexp-opt
 			 (mapcar
@@ -448,9 +454,7 @@ This includes \"fun..end\", \"where..end\",
 				      (setcar pst t))
 				    0))))
 			     ((eq p ?\n) (setcar fst (car pst)) 0)
-			     ((or (eq p ?\")
-				  (eq p ?#)
-				  (eq p ?/))
+			     ((memq p '(?\' ?\" ?# ?/))
 			      (cond
 			       ((looking-at mythryl-comment-regexp)
 				(setq mae (match-end 0)))
@@ -756,7 +760,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
        (list
 	(list "#[^#! \t\n]" 0 "w")
 	(list "[.][|/]/" 0 "\"")
-	(list "\\<[']\\([^']\\|\\.\\)[']" 0 "\"")))
+	(list mythryl-character-constant-regexp 0 "\"")))
   
   (when mythryl-syntax-highlighting
     (set
