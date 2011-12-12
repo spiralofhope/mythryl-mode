@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.16
+;; Version: 2.4.17
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -52,17 +52,6 @@
 ;;       (append '(("mythryl" . mythryl-mode))
 ;;               interpreter-mode-alist))
 
-;;; TODO
-
-;; + fontification of the overloadable string and backticks operators
-;; + indent records differently from braced statements
-;; + mythryl-interaction-mode
-;; + support of outlines
-;; + more indentation styles
-;; + command (possibly tied to "electric keys")
-;; + run emacs lint
-;; + improve indentation engine with syntax-table functions
-
 ;;; History:
 
 ;; Mythryl-mode was derived by Phil Rand from Stefan Monnier's
@@ -97,6 +86,14 @@
 ;; sml-mode. See http://www.iro.umontreal.ca/~monnier/elisp/, but
 ;; as of August 2009, the instructions on that page for accessing
 ;; the svn repository were incorrect.
+
+;;; TODO
+
+;; + fontification of the overloadable string and backticks operators
+;; + indent records differently from braced statements
+;; + mythryl-interaction-mode
+;; + support of outlines
+;; + more indentation styles
 
 (require 'custom)
 (require 'font-lock)
@@ -172,7 +169,14 @@ This is a bold character by default."
 	  "\\|" mythryl-block-comment-regexp
 	  "\\)"))
 
-(defconst mythryl-character-constant-regexp "\\<[']\\([^']\\|\\.\\)[']")
+(defconst mythryl-character-constant-regexp
+  "\\<\\('\\)\\(\\\\'\\|[^']\\)\\('\\)"
+  "Regexp matching character constants.")
+
+(defconst mythryl-perl-match-regexps
+  (list "[.]\\(/\\)\\(\\\\/\\|[^/]\\)*\\(/\\)"
+	"[.]\\(|\\)\\(\\\\|\\|[^|]\\)*\\(|\\)")
+  "Regexps matching ./.../ or .|...| syntaxes.")
 
 (defconst mythryl-string-regexp
   (concat
@@ -610,7 +614,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
     (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)))
 
-(defvar mythryl-mode-font-lock-keywords
+(defconst mythryl-mode-font-lock-keywords
   (list
    (list
     (eval-when-compile
@@ -662,6 +666,9 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	     "raise" "rec" "sharing" "sprintf" "stipulate" "then" "type"
 	     "val" "where" "with" "withtype") 'words))
     (list 1 font-lock-keyword-face))
+   (list mythryl-character-constant-regexp  (list 0 font-lock-string-face))
+   (list (car mythryl-perl-match-regexps) (list 0 font-lock-string-face))
+   (list (cadr mythryl-perl-match-regexps) (list 0 font-lock-string-face))
    (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
    (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
@@ -767,21 +774,18 @@ Currently, \";\" and \"}\" are defined as electric keys."
       ;; SYNTAX-ALIST
       nil
       ;; SYNTAX-BEGIN
-      (function mythryl-beginning-of-syntax)
-      ;; OTHER-VARS
-      (cons 'font-lock-comment-end-skip comment-end-skip)
-      (cons
-        'font-lock-syntactic-keywords
-        (list
-	 (list "#[^#! \t\n]" 0 "w")
-	 ;;'("\\([.]/\\)\\([^/]\\|[\\]/\\)*\\(/\\)" (1 (7 . ?/)) (3 (7 . ?/)))
-	 ;;'("\\([.][|]\\)\\([^|]\\|[\\][|]\\)*\\([|]\\)" (1 (7 . ?|)) (3 (7 . ?|)))
-	 '("[.]\\(/\\)\\(\\\\/\\|[^/]\\)*\\(/\\)" (1 (7 . ?')) (3 (7 . ?')))
-	 '("[.]\\(|\\)\\(\\\\|\\|[^|]\\)*\\(|\\)" (1 (7 . ?')) (3 (7 . ?')))
-	 '(   "\\('\\)\\(\\\\'\\|[^']\\)\\('\\)" (1 (7 . ?')) (3 (7 . ?')))
-	 ;;(list mythryl-character-constant-regexp 0 "\"")
-	 ))
-      ))))
+      (function mythryl-beginning-of-syntax)))
+
+    ;; Do not use a special syntax-table for font-lock
+    (set (make-local-variable 'font-lock-syntax-table) nil) 
+
+    (set (make-local-variable 'font-lock-comment-end-skip) comment-end-skip)
+    (set (make-local-variable 'font-lock-syntactic-keywords)
+    	 (list
+    	  (list "#[^#! \t\n]" 0 "w")
+    	  (list (car mythryl-perl-match-regexps)  '(1 (7 . ?/)) '(3 (7 . ?/)))
+    	  (list (cadr mythryl-perl-match-regexps) '(1 (7 . ?|)) '(3 (7 . ?|)))
+    	  (list mythryl-character-constant-regexp '(1 (7 . ?')) '(3 (7 . ?')))))))
 
 ;;; * Mythryl interaction mode
 
