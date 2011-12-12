@@ -1,3 +1,10 @@
+mythryl-mode (2.4.17.deb13) lucid; urgency=low
+
+  * Support for ./.../ and .|...| syntaxes.
+  * Recognize and fontify character constants.
+
+ -- Michele Bini <michele.bini@gmail.com>  Mon, 12 Dec 2011 22:49:33 +0100
+
 mythryl-mode (2.4.13.deb12) lucid; urgency=low
 
   * Fix for byte-compilation.
