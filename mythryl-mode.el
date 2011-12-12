@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.15
+;; Version: 2.4.16
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -54,9 +54,10 @@
 
 ;;; TODO
 
+;; + fontification of the overloadable string and backticks operators
 ;; + indent records differently from braced statements
 ;; + mythryl-interaction-mode
-;; + support of outline
+;; + support of outlines
 ;; + more indentation styles
 ;; + command (possibly tied to "electric keys")
 ;; + run emacs lint
@@ -649,8 +650,6 @@ Currently, \";\" and \"}\" are defined as electric keys."
              "\\)"))
     (list 1 font-lock-builtin-face))
    (list "^#DO\\>" 0 (list font-lock-preprocessor-face))
-   (list "[.]\\(|[^|]*|\\)" (list 0 font-lock-string-face))
-   (list "[.]\\(/[^/]*/\\)" (list 0 font-lock-string-face))
    (list
     (eval-when-compile
       (regexp-opt
@@ -755,13 +754,6 @@ Currently, \";\" and \"}\" are defined as electric keys."
   (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how it would help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
   (set (make-local-variable 'comment-end) "") ;; "*/")
 
-  (set (make-local-variable 'font-lock-comment-end-skip) comment-end-skip)
-  (set (make-local-variable 'font-lock-syntactic-keywords)
-       (list
-	(list "#[^#! \t\n]" 0 "w")
-	(list "[.][|/]/" 0 "\"")
-	(list mythryl-character-constant-regexp 0 "\"")))
-  
   (when mythryl-syntax-highlighting
     (set
      (make-local-variable 'font-lock-defaults)
@@ -777,8 +769,19 @@ Currently, \";\" and \"}\" are defined as electric keys."
       ;; SYNTAX-BEGIN
       (function mythryl-beginning-of-syntax)
       ;; OTHER-VARS
-      )))
-  )
+      (cons 'font-lock-comment-end-skip comment-end-skip)
+      (cons
+        'font-lock-syntactic-keywords
+        (list
+	 (list "#[^#! \t\n]" 0 "w")
+	 ;;'("\\([.]/\\)\\([^/]\\|[\\]/\\)*\\(/\\)" (1 (7 . ?/)) (3 (7 . ?/)))
+	 ;;'("\\([.][|]\\)\\([^|]\\|[\\][|]\\)*\\([|]\\)" (1 (7 . ?|)) (3 (7 . ?|)))
+	 '("[.]\\(/\\)\\(\\\\/\\|[^/]\\)*\\(/\\)" (1 (7 . ?')) (3 (7 . ?')))
+	 '("[.]\\(|\\)\\(\\\\|\\|[^|]\\)*\\(|\\)" (1 (7 . ?')) (3 (7 . ?')))
+	 '(   "\\('\\)\\(\\\\'\\|[^']\\)\\('\\)" (1 (7 . ?')) (3 (7 . ?')))
+	 ;;(list mythryl-character-constant-regexp 0 "\"")
+	 ))
+      ))))
 
 ;;; * Mythryl interaction mode
 
