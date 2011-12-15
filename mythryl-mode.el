@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.18
+;; Version: 2.4.19
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -72,6 +72,9 @@
 
 ;; v2.4.7 Improved indentation within and after C-style block
 ;; comments.				--Rev22, 2011-12-06
+
+;; v2.4.19  Add support for mythryld error messages, in
+;; compilation-mode.			--Rev22, 2011-12-15
 
 ;;; Repositories:
 
@@ -740,6 +743,12 @@ Currently, \";\" and \"}\" are defined as electric keys."
 ;;    elif (_) ...;
 
 ;; define-derived-mode
+
+(eval-after-load 'compile
+  '(progn
+     (add-to-list 'compilation-error-regexp-alist 'mythryld)
+     (add-to-list 'compilation-error-regexp-alist-alist
+		  '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2))))
 
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
