@@ -752,14 +752,14 @@ Currently, \";\" and \"}\" are defined as electric keys."
       ;; for XEmacs
       (require 'compile)
       (add-to-list 'compilation-error-regexp-alist-alist
-		   '(mythryld ("^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2)))
+		   '(mythryld ("^\\([^ \n\t:]+\\):\\([0-9]+\\)\\(\\.\\([0-9]+\\)\\)?.* Error:" 1 2)))
       (compilation-build-compilation-error-regexp-alist))
   ;; for GNU Emacs
   (eval-after-load 'compile
     '(progn
        (add-to-list 'compilation-error-regexp-alist 'mythryld)
        (add-to-list 'compilation-error-regexp-alist-alist
-		    '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2)))))
+		    '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\)\\(\\.\\([0-9]+\\)\\)?.* Error:" 1 2 3)))))
 
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
