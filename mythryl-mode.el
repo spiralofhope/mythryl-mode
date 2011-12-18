@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.20
+;; Version: 2.4.21
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -533,7 +533,6 @@ This includes \"fun..end\", \"where..end\",
 				0)
 			       ((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
 			       ((looking-at "\\<except\\>")
-				(setcar pst t)
 				(setcar pat t) 0)
 			       (t 0)))
 			     ((eq p ?h)
