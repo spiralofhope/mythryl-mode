@@ -1,4 +1,10 @@
-mythryl-mode (2.4.21.deb16) unstable; urgency=low
+mythryl-mode (2.4.22.deb17) unstable; urgency=low
+
+  * Improve indentation of argument lists of generics.
+
+ -- Michele Bini <michele.bini@gmail.com>  Tue, 20 Dec 2011 00:00:35 +0100
+
+mythryl-mode (2.4.21.deb16) lucid; urgency=low
 
   * Fix indentation of multi-line except statements.
 
