@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.21
+;; Version: 2.4.22
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -574,7 +574,7 @@ This includes \"fun..end\", \"where..end\",
 	   (goto-char (point-max)) (widen)
 	   (setq b (car b))
 	   (backward-to-indentation 0)
-	   (setq i (+ (if (or (car fst) (car pst)) 0 4) li b i))
+	   (setq i (+ (if (or (car fst) (car pst) (car pkg)) 0 4) li b i))
 	   (unless (= oi i)
 	     (delete-region
 	      (point)
