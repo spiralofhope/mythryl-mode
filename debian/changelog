@@ -1,3 +1,10 @@
+mythryl-mode (2.4.25.deb20) lucid; urgency=low
+
+  * Fix for indenting multi-line statements in proximity of the 'package'
+    keyword.
+
+ -- Michele Bini <michele.bini@gmail.com>  Tue, 20 Dec 2011 02:22:42 +0100
+
 mythryl-mode (2.4.24.deb19) lucid; urgency=low
 
   * Bugfix: force case-fold-search off in indentation code.
@@ -6,7 +13,8 @@ mythryl-mode (2.4.24.deb19) lucid; urgency=low
 
 mythryl-mode (2.4.23.deb18) lucid; urgency=low
 
-  * Fix regexp matching record names; indentation fix for some multi-line records.
+  * Fix regexp matching record names; indentation fix for some multi-line
+    records.
 
  -- Michele Bini <michele.bini@gmail.com>  Tue, 20 Dec 2011 01:20:00 +0100
 
