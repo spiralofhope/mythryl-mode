@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.23
+;; Version: 2.4.24
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -353,7 +353,8 @@ This includes \"fun..end\", \"where..end\",
    (mythryl-indent-comment-line)
    (save-restriction
      (widen)
-     (let ((oi (current-indentation)) ;; Original indentation
+     (let ((case-fold-search nil)
+	   (oi (current-indentation)) ;; Original indentation
 	   (b (save-excursion
 		;; Look for a previous line we can anchor the indentation to
 		(end-of-line 0)
