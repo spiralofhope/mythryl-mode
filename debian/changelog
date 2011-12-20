@@ -1,3 +1,11 @@
+mythryl-mode (2.5.1.deb21) unstable; urgency=low
+
+  * Improve indentation of lines after the package keyword.
+  * Added mythryl-forward-expression.
+  * Simplified main loop of indentation engine.
+
+ -- Michele Bini <michele.bini@gmail.com>  Tue, 20 Dec 2011 21:16:30 +0100
+
 mythryl-mode (2.4.25.deb20) lucid; urgency=low
 
   * Fix for indenting multi-line statements in proximity of the 'package'
