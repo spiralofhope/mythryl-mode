@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.4.22
+;; Version: 2.4.23
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -194,7 +194,7 @@ This is a bold character by default."
 
 (defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
-(defconst mythryl-record-name-regexp "[a-z_][a-z0-9_]+"
+(defconst mythryl-record-name-regexp "[a-z][a-z0-9_]*"
   "Regexp matching Mythryl record names.")
 
 (defconst mythryl-word-regexp "[A-Za-z0-9_']+"
@@ -225,8 +225,8 @@ This is a good place to put your preferred key bindings.")
 	(eval-when-compile
 	  (concat
 	   "\\(\\("
-	   "[a-z_][a-z0-9_]+" ;; mythryl-record-name-regexp
-	   "[ \t\n]+=>\\|[]}); ]\\|"
+	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
+	   "[ \t]*=>\\|[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac then herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
