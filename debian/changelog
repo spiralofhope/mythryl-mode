@@ -1,3 +1,9 @@
+mythryl-mode (2.4.23.deb18) lucid; urgency=low
+
+  * Fix regexp matching record names; indentation fix for some multi-line records.
+
+ -- Michele Bini <michele.bini@gmail.com>  Tue, 20 Dec 2011 01:20:00 +0100
+
 mythryl-mode (2.4.22.deb17) unstable; urgency=low
 
   * Improve indentation of argument lists of generics.
