@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.0
+;; Version: 2.5.1
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -406,6 +406,14 @@ This includes \"fun..end\", \"where..end\",
   (if v (mythryl-indent--add-tags sct tag)
     (mythryl-indent--del-tags sct tag)))
 
+(defun mythryl-indent--any-tags (sct &rest tags)
+  (setq sct (car sct))
+  (let (found)
+    (while (and sct (not found))
+      (setq found (memq (car sct) tags))
+      (setq sct (cdr sct)))
+    found))
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -539,7 +547,12 @@ This includes \"fun..end\", \"where..end\",
 			      (when mythryl-continued-line-indent-braced-blocks
 				(mythryl-indent--add-tags sct 'pst))
 			      (- mythryl-brace-indent-level))
-			     ((or (eq p ?\[) (eq p ?\())
+			     ((eq p ?\()
+			      (mythryl-indent--set-tag
+			       sct 'pst
+			       (mythryl-indent--has-tag sct 'pkg))
+			      mythryl-paren-indent-level)
+			     ((eq p ?\[)
 			      (mythryl-indent--del-tags sct 'pst)
 			      mythryl-paren-indent-level)
 			     ((or (eq p ?\]) (eq p ?\)))
@@ -621,10 +634,7 @@ This includes \"fun..end\", \"where..end\",
 	   (goto-char (point-max)) (widen)
 	   (setq b (car b))
 	   (backward-to-indentation 0)
-	   (let ((fst (mythryl-indent--has-tag sct 'fst))
-		 (pst (mythryl-indent--has-tag sct 'pst))
-		 (pkg (mythryl-indent--has-tag sct 'pkg)))
-	     (setq i (+ (if (or fst pst pkg) 0 4) li b i)))
+	   (setq i (+ (if (mythryl-indent--any-tags sct 'fst 'pst) 0 4) li b i))
 	   (unless (= oi i)
 	     (delete-region
 	      (point)
