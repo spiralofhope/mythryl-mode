@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.1
+;; Version: 2.5.2
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -31,7 +31,7 @@
 ;; Cynbe ru Taren from SML/NJ, but featuring a clear, more
 ;; programmer-friendly syntax.  See http://mythryl.org for more.
 ;;
-;; To use this mode, install this file in your elisp load path; then
+;; To use this mode, install this file in your elisp load path, then
 ;; insert the expression:
 ;;
 ;;   (load "mythryl-mode")
@@ -73,8 +73,12 @@
 ;; v2.4.7 Improved indentation within and after C-style block
 ;; comments.				--Rev22, 2011-12-06
 
-;; v2.4.20  Add support for mythryld error messages, in
+;; v2.4.20 Add support for mythryld error messages, in
 ;; compilation-mode.			--Rev22, 2011-12-15
+
+;; v2.5 Various fixes to the indentation engine.
+
+;; v2.5.2 Added outline support
 
 ;;; Repositories:
 
@@ -95,7 +99,6 @@
 ;; + fontification of the overloadable string and backticks operators
 ;; + indent records differently from braced statements
 ;; + mythryl-interaction-mode
-;; + support of outlines
 ;; + more indentation styles
 
 (require 'custom)
@@ -227,7 +230,7 @@ This is a good place to put your preferred key bindings.")
 	   "\\(\\("
 	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
 	   "[ \t]*=>\\|[]}); ]\\|"
-	   (regexp-opt (mapcar 'symbol-name '(end fi esac then herein elif also else where)) 'words)
+	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
 
@@ -275,9 +278,18 @@ This includes \"fun..end\", \"where..end\",
 	       (looking-at mythryl-comment-regexp))
       (goto-char (match-end 0)))))
 
-(defun mythryl-skip-dot-expressions ()
-  (when (looking-at "\\([.][A-Za-z0-9_]+\\)+")
-    (goto-char (match-end 0))))
+(defun mythryl-skip-tail-expressions ()
+  (while
+      (cond
+       ((looking-at "([.][A-Za-z0-9_]+")
+	(goto-char (match-end 0))
+	t)
+       ((save-excursion
+	  (mythryl-skip-whitespace)
+	  (or
+	   (looking-at "\\<where\\>")
+	   (looking-at "\\<except\\>")))
+	(mythryl-forward-expression)))))
 
 (defun mythryl-forward-expression ()
   (interactive)
@@ -285,9 +297,32 @@ This includes \"fun..end\", \"where..end\",
     (mythryl-skip-whitespace)
     (let (endrgx)
       (cond
+       ((looking-at "\\<\\(fu?n\\|except\\)\\>")
+	(goto-char (match-end 0))
+	(mythryl-skip-whitespace)
+	(let (ok pattern)
+	  (while
+	      (cond
+	       ((and endrgx (looking-at endrgx))
+		(goto-char (match-end 0))
+		(setq ok t)
+		nil)
+	       ((and (not endrgx) (looking-at "[);]"))
+		(setq ok t)
+		nil)
+	       ((looking-at "=>")
+		(goto-char (match-end 0))
+		(setq endrgx "\\<end\\>")
+		t)
+	       ((and
+		 (mythryl-forward-expression)
+		 (progn (mythryl-skip-whitespace) t)))))
+	  (when ok (mythryl-skip-tail-expressions))
+	  ok))
        ((cond
 	 ((looking-at "\\<case\\>")		(setq endrgx "\\<esac\\>") t)
 	 ((looking-at "\\<if\\>")		(setq endrgx "\\<fi\\>")   t)
+	 ((looking-at "\\<where\\>")		(setq endrgx "\\<end\\>")  t)
 	 ((looking-at "\\<stipulate\\>")	(setq endrgx "\\<end\\>")  t))
 	(goto-char (match-end 0))
 	(mythryl-skip-whitespace)
@@ -301,15 +336,42 @@ This includes \"fun..end\", \"where..end\",
 	       ((and
 		 (mythryl-forward-expression)
 		 (progn (mythryl-skip-whitespace) t)))))
+	  (when ok (mythryl-skip-tail-expressions))
 	  ok))
+       ((looking-at ";")
+	(goto-char (match-end 0))
+	t)
        ((condition-case nil
 	    (let ((p (point)))
 	      (forward-sexp 1)
 	      (and (> (point) p)
 		   (progn
-		     (mythryl-skip-dot-expressions)
+		     (mythryl-skip-tail-expressions)
 		     t)))
 	  (error nil)))))))
+
+(defun mythryl-forward-statement ()
+  (interactive)
+  (mythryl-skip-whitespace)
+  (let (ok)
+    (while
+	(cond
+	 ((or (looking-at ";")
+	      (looking-at "\\<also\\>"))
+	  (goto-char (match-end 0))
+	  (mythryl-skip-whitespace)
+	  (setq ok t) 
+	  nil)
+	 ((or (looking-at "[]})]")
+	      (looking-at "\\<\\(elif\\|else\\|herein\\|end\\|esac\\|fi\\)\\>")
+	      )
+	      nil)
+	 ((and
+	   (mythryl-forward-expression)
+	   (progn
+	     (mythryl-skip-whitespace)
+	     t)))))
+    ok))
 
 (defun mythryl-end-of-next-expression () ;; Return end of next mythryl expression
   (save-excursion
@@ -719,13 +781,13 @@ Currently, \";\" and \"}\" are defined as electric keys."
    (list
     (eval-when-compile
       (regexp-opt
-       ;; Maybe add "before", and remove "then"
+       ;; Maybe add "before"
        (list "abstype" "also" "and" "api" "as" "case" "class" "elif"
 	     "else" "end" "eqtype" "esac" "except" "exception" "fi"
 	     "field" "fn" "for" "fprintf" "fun" "generic" "generic_api"
 	     "herein" "if" "include" "infix" "infixr" "lazy" "method"
 	     "my" "nonfix" "op" "or" "overload" "package" "printf"
-	     "raise" "rec" "sharing" "sprintf" "stipulate" "then" "type"
+	     "raise" "rec" "sharing" "sprintf" "stipulate" "type"
 	     "val" "where" "with" "withtype") 'words))
     (list 1 font-lock-keyword-face))
    (list mythryl-character-constant-regexp  (list 0 font-lock-string-face))
@@ -820,6 +882,16 @@ Currently, \";\" and \"}\" are defined as electric keys."
        (add-to-list 'compilation-error-regexp-alist-alist
 		    '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2)))))
 
+;; Outline support
+(defconst mythryl-mode-outline-regexp "[ \t{]*\\(\\<\\(fun\\|package\\|herein\\)\\>[^;]*$\\|##\\)")
+;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
+(defun mythryl-mode-outline-level ()
+  (save-excursion
+    (beginning-of-line)
+    (save-match-data
+      (looking-at "[ \t{]*")
+      (string-width (match-string 0)))))
+
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
@@ -831,7 +903,12 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map ";" (function mythryl-electric-key)))
   (when mythryl-auto-indent
     (set (make-local-variable 'indent-line-function) (function mythryl-indent-line)))
+
   (set (make-local-variable 'compile-command) "mythryld ")
+
+  ;; Configure outlines
+  (set (make-local-variable 'outline-regexp) mythryl-mode-outline-regexp)
+  (set (make-local-variable 'outline-level) (function mythryl-mode-outline-level))
 
   (set (make-local-variable 'comment-use-syntax) t)
   ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?
