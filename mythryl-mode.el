@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.1
+;; Version: 2.5.8
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -31,7 +31,7 @@
 ;; Cynbe ru Taren from SML/NJ, but featuring a clear, more
 ;; programmer-friendly syntax.  See http://mythryl.org for more.
 ;;
-;; To use this mode, install this file in your elisp load path; then
+;; To use this mode, install this file in your elisp load path, then
 ;; insert the expression:
 ;;
 ;;   (load "mythryl-mode")
@@ -73,8 +73,12 @@
 ;; v2.4.7 Improved indentation within and after C-style block
 ;; comments.				--Rev22, 2011-12-06
 
-;; v2.4.20  Add support for mythryld error messages, in
+;; v2.4.20 Add support for mythryld error messages, in
 ;; compilation-mode.			--Rev22, 2011-12-15
+
+;; v2.5 Various fixes to the indentation engine.
+
+;; v2.5.2 Added outline support
 
 ;;; Repositories:
 
@@ -95,7 +99,6 @@
 ;; + fontification of the overloadable string and backticks operators
 ;; + indent records differently from braced statements
 ;; + mythryl-interaction-mode
-;; + support of outlines
 ;; + more indentation styles
 
 (require 'custom)
@@ -163,47 +166,47 @@ Example: pkg1::pkg2::"
 This is a bold character by default."
   :group 'mythryl)
 
-(defconst mythryl-line-comment-regexp "#\\($\\|[\t #!]\\).*")
-(defconst mythryl-block-comment-regexp
-  "/[*]\\([^*]+\\|[*]+[^/*]+\\)*\\($\\|[*]+/\\)") ;; (re-search-forward mythryl-block-comment-regexp)
+(defvar mythryl-line-comment-regexp "#\\($\\|[\t #!]\\).*")
+(defvar mythryl-block-comment-regexp
+  "/[*]\\([^*]+\\|[*]+[^/*]+\\)*\\($\\|[*]+/\\)")
 
-(defconst mythryl-comment-regexp
+(defvar mythryl-comment-regexp
   (concat "\\(" mythryl-line-comment-regexp
 	  "\\|" mythryl-block-comment-regexp
 	  "\\)"))
 
-(defconst mythryl-character-constant-regexp
+(defvar mythryl-character-constant-regexp
   "\\<\\('\\)\\(\\\\.\\|[^']\\)\\('\\)"
   "Regexp matching character constants.")
 
-(defconst mythryl-perl-match-regexps
-  (list "[.]\\(/\\)\\(\\\\.\\|[^/]\\)*\\(/\\)"
-	"[.]\\(|\\)\\(\\\\.\\|[^|]\\)*\\(|\\)")
+(defvar mythryl-perl-match-regexps
+  (list "[.]\\(/\\)\\(\\\\[^.]\\|\\\\.\\|[^/\\]\\)*\\(/\\)"
+	"[.]\\(|\\)\\(\\\\[^.]\\|\\\\.\\|[^|\\]\\)*\\(|\\)")
   "Regexps matching ./.../ or .|...| syntaxes.")
 
-(defconst mythryl-string-regexp
+(defvar mythryl-string-regexp
   (concat
-   "\\(\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"\\|"
+   "\\(\"\\(\\\\[^.]\\|\\\\.\\|[^\"\\]\\)*\"\\|"
    mythryl-character-constant-regexp
    "\\)"))
 
-(defconst mythryl-comment-or-string-regexp
+(defvar mythryl-comment-or-string-regexp
   (concat "\\(" mythryl-comment-regexp
 	  "\\|" mythryl-string-regexp
 	  "\\)"))
 
-(defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
+(defvar mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
-(defconst mythryl-record-name-regexp "[a-z][a-z0-9_]*"
+(defvar mythryl-record-name-regexp "[a-z][a-z0-9_]*"
   "Regexp matching Mythryl record names.")
 
-(defconst mythryl-word-regexp "[A-Za-z0-9_']+"
+(defvar mythryl-word-regexp "[A-Za-z0-9_']+"
   "A regexp matching every kind of mythryl 'word'.
 
 It matches numbers identifiers, package names, operators, types, apis, type
 constructors, pattern identifiers.")
 
-(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
+(defvar mythryl-code-line-regexp "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -227,7 +230,7 @@ This is a good place to put your preferred key bindings.")
 	   "\\(\\("
 	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
 	   "[ \t]*=>\\|[]}); ]\\|"
-	   (regexp-opt (mapcar 'symbol-name '(end fi esac then herein elif also else where)) 'words)
+	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
 
@@ -271,24 +274,60 @@ This includes \"fun..end\", \"where..end\",
 (defun mythryl-skip-whitespace ()
   (interactive)
   (save-match-data
-    (while (or (looking-at "[ \t\n]")
+    (while (or (looking-at "[ \t\n]+")
 	       (looking-at mythryl-comment-regexp))
       (goto-char (match-end 0)))))
 
-(defun mythryl-skip-dot-expressions ()
-  (when (looking-at "\\([.][A-Za-z0-9_]+\\)+")
-    (goto-char (match-end 0))))
+(defun mythryl-skip-tail-expressions ()
+  (while
+      (cond
+       ((or (looking-at "[.][A-Za-z0-9_]+")
+	    (looking-at mythryl-op-regexp)) 
+	(goto-char (match-end 0))
+	t)
+       ((save-excursion
+	  (mythryl-skip-whitespace)
+	  (or
+	   (looking-at "\\<where\\>")
+	   (looking-at "\\<except\\>")))
+	(mythryl-forward-expression)))))
 
-(defun mythryl-forward-expression ()
+(defun mythryl-forward-expression (&optional after-prefix)
   (interactive)
   (save-match-data
-    (mythryl-skip-whitespace)
+    (unless after-prefix
+      (mythryl-skip-whitespace))
     (let (endrgx)
       (cond
+       ((and after-prefix (looking-at "[ \t\n]")) nil)
+       ((looking-at "\\<\\(fu?n\\|except\\)\\>")
+	(goto-char (match-end 0))
+	(mythryl-skip-whitespace)
+	(let (ok pattern)
+	  (while
+	      (cond
+	       ((and endrgx (looking-at endrgx))
+		(goto-char (match-end 0))
+		(setq ok t)
+		nil)
+	       ((and (not endrgx) (looking-at "\\([);]\\|\\<also\\>\\)"))
+		(setq ok t)
+		nil)
+	       ((looking-at "=>")
+		(goto-char (match-end 0))
+		(setq endrgx "\\<end\\>")
+		t)
+	       ((and
+		 (mythryl-forward-expression)
+		 (progn (mythryl-skip-whitespace) t)))))
+	  (when ok (mythryl-skip-tail-expressions))
+	  ok))
        ((cond
 	 ((looking-at "\\<case\\>")		(setq endrgx "\\<esac\\>") t)
 	 ((looking-at "\\<if\\>")		(setq endrgx "\\<fi\\>")   t)
-	 ((looking-at "\\<stipulate\\>")	(setq endrgx "\\<end\\>")  t))
+	 ((looking-at "\\<where\\>")		(setq endrgx "\\<end\\>")  t)
+	 ((looking-at "\\<stipulate\\>")	(setq endrgx "\\<end\\>")  t)
+	 ((looking-at "[[({]")			(setq endrgx "[])}]")  t))
 	(goto-char (match-end 0))
 	(mythryl-skip-whitespace)
 	(let (ok)
@@ -301,15 +340,56 @@ This includes \"fun..end\", \"where..end\",
 	       ((and
 		 (mythryl-forward-expression)
 		 (progn (mythryl-skip-whitespace) t)))))
+	  (when ok (mythryl-skip-tail-expressions))
 	  ok))
-       ((condition-case nil
-	    (let ((p (point)))
-	      (forward-sexp 1)
-	      (and (> (point) p)
-		   (progn
-		     (mythryl-skip-dot-expressions)
-		     t)))
-	  (error nil)))))))
+       ((and
+	 (not after-prefix)
+	 (looking-at mythryl-op-regexp)
+	 (goto-char (match-end 0))
+	 (let ((p
+		(save-excursion
+		  (and (mythryl-forward-expression t)
+		       (point)))))
+	   (when p
+	     (goto-char p)
+	     	(mythryl-skip-tail-expressions))
+	   t)))
+       ((or
+	 (looking-at mythryl-word-regexp)
+	 (looking-at mythryl-string-regexp)
+	 (looking-at mythryl-character-constant-regexp)
+	 (looking-at (car mythryl-perl-match-regexps))
+	 (looking-at (cadr mythryl-perl-match-regexps))
+	 )
+	(goto-char (match-end 0))
+	(mythryl-skip-tail-expressions)
+	t)
+       ((< (point) (point-max))
+	(goto-char (+ (point) 1))
+	t)))))
+
+(defun mythryl-forward-statement ()
+  (interactive)
+  (mythryl-skip-whitespace)
+  (let (ok)
+    (while
+	(cond
+	 ((or (looking-at ";")
+	      (looking-at "\\<also\\>"))
+	  (goto-char (match-end 0))
+	  (mythryl-skip-whitespace)
+	  (setq ok t) 
+	  nil)
+	 ((or (looking-at "[]})]")
+	      (looking-at "\\<\\(elif\\|else\\|herein\\|end\\|esac\\|fi\\)\\>")
+	      )
+	      nil)
+	 ((and
+	   (mythryl-forward-expression)
+	   (progn
+	     (mythryl-skip-whitespace)
+	     t)))))
+    ok))
 
 (defun mythryl-end-of-next-expression () ;; Return end of next mythryl expression
   (save-excursion
@@ -414,6 +494,79 @@ This includes \"fun..end\", \"where..end\",
       (setq sct (cdr sct)))
     found))
 
+(defun mythryl-indent--search-backward-outside-block-comment (rgx)
+  (let ((initial (point))
+	(front (point))
+	done
+	result) ;; match a code line
+    (while (not done)
+      (setq result (re-search-backward rgx nil t))
+      ;; (y-or-n-p "code line")
+      (if
+	  (and
+	   result
+	   (save-excursion
+	     ;; keep looking if we were inside a block comment
+	     (and (re-search-forward "\\([/][*]\\|[*][/]\\)" front t)
+		  (progn
+		    (goto-char (match-beginning 0))
+		    ;; (y-or-n-p "block comment marker")
+		    (looking-at "[*][/]")))))
+	  (if (re-search-backward "[/][*]" nil t)
+	      (setq front (point))
+	    (setq result nil)
+	    (setq done t))
+	(setq done t)))
+    (unless result (goto-char initial))
+    result))
+
+(defun mythryl-indent--back-to-anchor ()
+  (interactive)
+  (forward-to-indentation 0)
+  (let ((front (point)))
+    (end-of-line 0)
+    (if (= mythryl-continued-line-indent-level 0)
+	(if (re-search-backward
+	     (eval-when-compile
+	       (concat
+		"^[ \t]*\\(=\\|"
+		"#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
+			      "\\|\\<where\\>\\)"
+			      ))  ;; 'where' may be after a package or a code block
+	     nil t)
+	    (goto-char (match-beginning 1))
+	  (goto-char (point-min)))
+      (if (mythryl-indent--search-backward-outside-block-comment
+	   mythryl-code-line-regexp)
+	  (progn
+	    (setq front (match-beginning 1))
+	    ;; (y-or-n-p "initial position")
+	    (mythryl-skip-whitespace)
+	    (beginning-of-line 1)
+	    ;; (y-or-n-p "corrected code line")
+	    (if (mythryl-indent--search-backward-outside-block-comment
+		 (if mythryl-continued-line-indent-braced-blocks
+		     "^[^#/*\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
+		   "^[^#/*\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$"))
+		(progn
+		  (goto-char (match-end 0))
+		  (mythryl-skip-whitespace) ;; skip over any block comment
+		  (beginning-of-line 1)
+		  ;; (y-or-n-p "before a statement")
+		  (if (re-search-forward
+		       mythryl-code-line-regexp
+		       (+ front 1) t)
+		      (progn
+			;; (y-or-n-p "final code line")
+			(goto-char (match-beginning 1)))
+		    (beginning-of-line 2)
+		    (forward-to-indentation 0)))
+	      (goto-char (point-min))
+	      (forward-to-indentation 0)))
+	(goto-char (point-min))
+	(forward-to-indentation 0))))
+  (mythryl-skip-closing))
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -427,42 +580,7 @@ This includes \"fun..end\", \"where..end\",
 	   (oi (current-indentation)) ;; Original indentation
 	   (b (save-excursion
 		;; Look for a previous line we can anchor the indentation to
-		(end-of-line 0)
-		(let ((front (point)))
-		  (if (= mythryl-continued-line-indent-level 0)
-		      (if (re-search-backward
-			   (eval-when-compile
-			     (concat
-			      "^[ \t]*\\(=\\|"
-			      "#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
-			      "\\|\\<where\\>\\)"
-			      ))  ;; 'where' may be after a package or a code block
-			   nil t)
-			  (goto-char (match-beginning 1))
-			(goto-char (point-min)))
-		    (if (re-search-backward
-			 mythryl-code-line-regexp
-			 nil t)
-			(progn
-			  (setq front (match-beginning 1))
-			  (if (re-search-backward
-			       (if mythryl-continued-line-indent-braced-blocks
-			       "^[^#/*\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
-			       "^[^#/*\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$")
-			       nil t)
-			      (progn
-				(goto-char (match-end 0))
-				(if (re-search-forward
-				     mythryl-code-line-regexp
-				     (+ front 1) t)
-				    (goto-char (match-beginning 1))
-				  (beginning-of-line 2)
-				  (forward-to-indentation 0)))
-			    (goto-char (point-min))
-			    (forward-to-indentation 0)))
-		      (goto-char (point-min))
-		      (forward-to-indentation 0))))
-		(mythryl-skip-closing)
+		(mythryl-indent--back-to-anchor)
 		(cons (current-indentation)
 		      (point))))
 	   (mp nil) ;; when set, point to restore after indenting
@@ -676,7 +794,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
     (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)))
 
-(defconst mythryl-mode-font-lock-keywords
+(defvar mythryl-mode-font-lock-keywords
   (list
    (list
     (eval-when-compile
@@ -719,13 +837,13 @@ Currently, \";\" and \"}\" are defined as electric keys."
    (list
     (eval-when-compile
       (regexp-opt
-       ;; Maybe add "before", and remove "then"
+       ;; Maybe add "before"
        (list "abstype" "also" "and" "api" "as" "case" "class" "elif"
 	     "else" "end" "eqtype" "esac" "except" "exception" "fi"
 	     "field" "fn" "for" "fprintf" "fun" "generic" "generic_api"
 	     "herein" "if" "include" "infix" "infixr" "lazy" "method"
 	     "my" "nonfix" "op" "or" "overload" "package" "printf"
-	     "raise" "rec" "sharing" "sprintf" "stipulate" "then" "type"
+	     "raise" "rec" "sharing" "sprintf" "stipulate" "type"
 	     "val" "where" "with" "withtype") 'words))
     (list 1 font-lock-keyword-face))
    (list mythryl-character-constant-regexp  (list 0 font-lock-string-face))
@@ -820,6 +938,16 @@ Currently, \";\" and \"}\" are defined as electric keys."
        (add-to-list 'compilation-error-regexp-alist-alist
 		    '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2)))))
 
+;; Outline support
+(defvar mythryl-mode-outline-regexp "[ \t{]*\\(\\<\\(fun\\|package\\|herein\\)\\>[^;]*$\\|##\\)")
+;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
+(defun mythryl-mode-outline-level ()
+  (save-excursion
+    (beginning-of-line)
+    (save-match-data
+      (looking-at "[ \t{]*")
+      (string-width (match-string 0)))))
+
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
@@ -831,7 +959,12 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map ";" (function mythryl-electric-key)))
   (when mythryl-auto-indent
     (set (make-local-variable 'indent-line-function) (function mythryl-indent-line)))
+
   (set (make-local-variable 'compile-command) "mythryld ")
+
+  ;; Configure outlines
+  (set (make-local-variable 'outline-regexp) mythryl-mode-outline-regexp)
+  (set (make-local-variable 'outline-level) (function mythryl-mode-outline-level))
 
   (set (make-local-variable 'comment-use-syntax) t)
   ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?

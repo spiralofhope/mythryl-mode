@@ -1,4 +1,14 @@
-mythryl-mode (2.5.1.deb21) unstable; urgency=low
+mythryl-mode (2.5.8.deb22) lucid; urgency=low
+
+  * (mythryl-forward-expression): Support expressions with prefix and
+    postfix operations.
+  * Improved indentation in proximity of complex multi-line block
+    comments.
+  * Add outline support.
+
+ -- Michele Bini <michele.bini@gmail.com>  Thu, 22 Dec 2011 17:16:08 +0100
+
+mythryl-mode (2.5.1.deb21) lucid; urgency=low
 
   * Improve indentation of lines after the package keyword.
   * Added mythryl-forward-expression.
