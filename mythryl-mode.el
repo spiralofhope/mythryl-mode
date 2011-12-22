@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.7
+;; Version: 2.5.8
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -166,47 +166,47 @@ Example: pkg1::pkg2::"
 This is a bold character by default."
   :group 'mythryl)
 
-(defconst mythryl-line-comment-regexp "#\\($\\|[\t #!]\\).*")
-(defconst mythryl-block-comment-regexp
+(defvar mythryl-line-comment-regexp "#\\($\\|[\t #!]\\).*")
+(defvar mythryl-block-comment-regexp
   "/[*]\\([^*]+\\|[*]+[^/*]+\\)*\\($\\|[*]+/\\)")
 
-(defconst mythryl-comment-regexp
+(defvar mythryl-comment-regexp
   (concat "\\(" mythryl-line-comment-regexp
 	  "\\|" mythryl-block-comment-regexp
 	  "\\)"))
 
-(defconst mythryl-character-constant-regexp
+(defvar mythryl-character-constant-regexp
   "\\<\\('\\)\\(\\\\.\\|[^']\\)\\('\\)"
   "Regexp matching character constants.")
 
-(defconst mythryl-perl-match-regexps
+(defvar mythryl-perl-match-regexps
   (list "[.]\\(/\\)\\(\\\\[^.]\\|\\\\.\\|[^/\\]\\)*\\(/\\)"
 	"[.]\\(|\\)\\(\\\\[^.]\\|\\\\.\\|[^|\\]\\)*\\(|\\)")
   "Regexps matching ./.../ or .|...| syntaxes.")
 
-(defconst mythryl-string-regexp
+(defvar mythryl-string-regexp
   (concat
    "\\(\"\\(\\\\[^.]\\|\\\\.\\|[^\"\\]\\)*\"\\|"
    mythryl-character-constant-regexp
    "\\)"))
 
-(defconst mythryl-comment-or-string-regexp
+(defvar mythryl-comment-or-string-regexp
   (concat "\\(" mythryl-comment-regexp
 	  "\\|" mythryl-string-regexp
 	  "\\)"))
 
-(defconst mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
+(defvar mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
-(defconst mythryl-record-name-regexp "[a-z][a-z0-9_]*"
+(defvar mythryl-record-name-regexp "[a-z][a-z0-9_]*"
   "Regexp matching Mythryl record names.")
 
-(defconst mythryl-word-regexp "[A-Za-z0-9_']+"
+(defvar mythryl-word-regexp "[A-Za-z0-9_']+"
   "A regexp matching every kind of mythryl 'word'.
 
 It matches numbers identifiers, package names, operators, types, apis, type
 constructors, pattern identifiers.")
 
-(defconst mythryl-code-line-regexp "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
+(defvar mythryl-code-line-regexp "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -794,7 +794,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
     (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)))
 
-(defconst mythryl-mode-font-lock-keywords
+(defvar mythryl-mode-font-lock-keywords
   (list
    (list
     (eval-when-compile
@@ -939,7 +939,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 		    '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2)))))
 
 ;; Outline support
-(defconst mythryl-mode-outline-regexp "[ \t{]*\\(\\<\\(fun\\|package\\|herein\\)\\>[^;]*$\\|##\\)")
+(defvar mythryl-mode-outline-regexp "[ \t{]*\\(\\<\\(fun\\|package\\|herein\\)\\>[^;]*$\\|##\\)")
 ;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
 (defun mythryl-mode-outline-level ()
   (save-excursion
