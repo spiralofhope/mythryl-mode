@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.3
+;; Version: 2.5.4
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -308,7 +308,7 @@ This includes \"fun..end\", \"where..end\",
 		(goto-char (match-end 0))
 		(setq ok t)
 		nil)
-	       ((and (not endrgx) (looking-at "[);]"))
+	       ((and (not endrgx) (looking-at "\\([);]\\|\\<also\\>\\)"))
 		(setq ok t)
 		nil)
 	       ((looking-at "=>")
@@ -482,6 +482,79 @@ This includes \"fun..end\", \"where..end\",
       (setq sct (cdr sct)))
     found))
 
+(defun mythryl-indent--search-backward-outside-block-comment (rgx)
+  (let ((initial (point))
+	(front (point))
+	done
+	result) ;; match a code line
+    (while (not done)
+      (setq result (re-search-backward rgx nil t))
+      ;; (y-or-n-p "code line")
+      (if
+	  (and
+	   result
+	   (save-excursion
+	     ;; keep looking if we were inside a block comment
+	     (and (re-search-forward "\\([/][*]\\|[*][/]\\)" front t)
+		  (progn
+		    (goto-char (match-beginning 0))
+		    ;; (y-or-n-p "block comment marker")
+		    (looking-at "[*][/]")))))
+	  (if (re-search-backward "[/][*]" nil t)
+	      (setq front (point))
+	    (setq result nil)
+	    (setq done t))
+	(setq done t)))
+    (unless result (goto-char initial))
+    result))
+
+(defun mythryl-indent--back-to-anchor ()
+  (interactive)
+  (forward-to-indentation 0)
+  (let ((front (point)))
+    (end-of-line 0)
+    (if (= mythryl-continued-line-indent-level 0)
+	(if (re-search-backward
+	     (eval-when-compile
+	       (concat
+		"^[ \t]*\\(=\\|"
+		"#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
+			      "\\|\\<where\\>\\)"
+			      ))  ;; 'where' may be after a package or a code block
+	     nil t)
+	    (goto-char (match-beginning 1))
+	  (goto-char (point-min)))
+      (if (mythryl-indent--search-backward-outside-block-comment
+	   mythryl-code-line-regexp)
+	  (progn
+	    (setq front (match-beginning 1))
+	    ;; (y-or-n-p "initial position")
+	    (mythryl-skip-whitespace)
+	    (beginning-of-line 1)
+	    ;; (y-or-n-p "corrected code line")
+	    (if (mythryl-indent--search-backward-outside-block-comment
+		 (if mythryl-continued-line-indent-braced-blocks
+		     "^[^#/*\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
+		   "^[^#/*\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$"))
+		(progn
+		  (goto-char (match-end 0))
+		  (mythryl-skip-whitespace) ;; skip over any block comment
+		  (beginning-of-line 1)
+		  ;; (y-or-n-p "before a statement")
+		  (if (re-search-forward
+		       mythryl-code-line-regexp
+		       (+ front 1) t)
+		      (progn
+			;; (y-or-n-p "final code line")
+			(goto-char (match-beginning 1)))
+		    (beginning-of-line 2)
+		    (forward-to-indentation 0)))
+	      (goto-char (point-min))
+	      (forward-to-indentation 0)))
+	(goto-char (point-min))
+	(forward-to-indentation 0))))
+  (mythryl-skip-closing))
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -495,42 +568,7 @@ This includes \"fun..end\", \"where..end\",
 	   (oi (current-indentation)) ;; Original indentation
 	   (b (save-excursion
 		;; Look for a previous line we can anchor the indentation to
-		(end-of-line 0)
-		(let ((front (point)))
-		  (if (= mythryl-continued-line-indent-level 0)
-		      (if (re-search-backward
-			   (eval-when-compile
-			     (concat
-			      "^[ \t]*\\(=\\|"
-			      "#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
-			      "\\|\\<where\\>\\)"
-			      ))  ;; 'where' may be after a package or a code block
-			   nil t)
-			  (goto-char (match-beginning 1))
-			(goto-char (point-min)))
-		    (if (re-search-backward
-			 mythryl-code-line-regexp
-			 nil t)
-			(progn
-			  (setq front (match-beginning 1))
-			  (if (re-search-backward
-			       (if mythryl-continued-line-indent-braced-blocks
-			       "^[^#/*\n]*\\(;\\|\\<also\\>\\)[ \t]*$"
-			       "^[^#/*\n]*\\([;{]\\|\\<also\\>\\)[ \t]*$")
-			       nil t)
-			      (progn
-				(goto-char (match-end 0))
-				(if (re-search-forward
-				     mythryl-code-line-regexp
-				     (+ front 1) t)
-				    (goto-char (match-beginning 1))
-				  (beginning-of-line 2)
-				  (forward-to-indentation 0)))
-			    (goto-char (point-min))
-			    (forward-to-indentation 0)))
-		      (goto-char (point-min))
-		      (forward-to-indentation 0))))
-		(mythryl-skip-closing)
+		(mythryl-indent--back-to-anchor)
 		(cons (current-indentation)
 		      (point))))
 	   (mp nil) ;; when set, point to restore after indenting
