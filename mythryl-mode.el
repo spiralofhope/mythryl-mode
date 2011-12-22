@@ -275,7 +275,7 @@ This includes \"fun..end\", \"where..end\",
 (defun mythryl-skip-whitespace ()
   (interactive)
   (save-match-data
-    (while (or (looking-at "[ \t\n]")
+    (while (or (looking-at "[ \t\n]+")
 	       (looking-at mythryl-comment-regexp))
       (goto-char (match-end 0)))))
 
