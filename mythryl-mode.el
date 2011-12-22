@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.4
+;; Version: 2.5.6
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -100,7 +100,6 @@
 ;; + indent records differently from braced statements
 ;; + mythryl-interaction-mode
 ;; + more indentation styles
-;; + should not indent lines preceded by a backslash
 
 (require 'custom)
 (require 'font-lock)
@@ -282,7 +281,8 @@ This includes \"fun..end\", \"where..end\",
 (defun mythryl-skip-tail-expressions ()
   (while
       (cond
-       ((looking-at "[.][A-Za-z0-9_]+")
+       ((or (looking-at "[.][A-Za-z0-9_]+")
+	    (looking-at mythryl-op-regexp)) 
 	(goto-char (match-end 0))
 	t)
        ((save-excursion
@@ -292,12 +292,14 @@ This includes \"fun..end\", \"where..end\",
 	   (looking-at "\\<except\\>")))
 	(mythryl-forward-expression)))))
 
-(defun mythryl-forward-expression ()
+(defun mythryl-forward-expression (&optional after-prefix)
   (interactive)
   (save-match-data
-    (mythryl-skip-whitespace)
+    (unless after-prefix
+      (mythryl-skip-whitespace))
     (let (endrgx)
       (cond
+       ((and after-prefix (looking-at "[ \t\n]")) nil)
        ((looking-at "\\<\\(fu?n\\|except\\)\\>")
 	(goto-char (match-end 0))
 	(mythryl-skip-whitespace)
@@ -340,10 +342,21 @@ This includes \"fun..end\", \"where..end\",
 		 (progn (mythryl-skip-whitespace) t)))))
 	  (when ok (mythryl-skip-tail-expressions))
 	  ok))
+       ((and
+	 (not after-prefix)
+	 (looking-at mythryl-op-regexp)
+	 (goto-char (match-end 0))
+	 (let ((p
+		(save-excursion
+		  (and (mythryl-forward-expression t)
+		       (point)))))
+	   (when p
+	     (goto-char p)
+	     	(mythryl-skip-tail-expressions))
+	   t)))
        ((or
 	 (looking-at mythryl-word-regexp)
 	 (looking-at mythryl-string-regexp)
-	 (looking-at mythryl-op-regexp)
 	 (looking-at mythryl-character-constant-regexp)
 	 (looking-at (car mythryl-perl-match-regexps))
 	 (looking-at (cadr mythryl-perl-match-regexps))
