@@ -168,7 +168,7 @@ This is a bold character by default."
 
 (defconst mythryl-line-comment-regexp "#\\($\\|[\t #!]\\).*")
 (defconst mythryl-block-comment-regexp
-  "/[*]\\([^*]+\\|[*]+[^/*]+\\)*\\($\\|[*]+/\\)") ;; (re-search-forward mythryl-block-comment-regexp)
+  "/[*]\\([^*]+\\|[*]+[^/*]+\\)*\\($\\|[*]+/\\)")
 
 (defconst mythryl-comment-regexp
   (concat "\\(" mythryl-line-comment-regexp
