@@ -282,7 +282,7 @@ This includes \"fun..end\", \"where..end\",
 (defun mythryl-skip-tail-expressions ()
   (while
       (cond
-       ((looking-at "([.][A-Za-z0-9_]+")
+       ((looking-at "[.][A-Za-z0-9_]+")
 	(goto-char (match-end 0))
 	t)
        ((save-excursion
@@ -341,7 +341,6 @@ This includes \"fun..end\", \"where..end\",
 	  (when ok (mythryl-skip-tail-expressions))
 	  ok))
        ((or
-	 (looking-at ";")
 	 (looking-at mythryl-word-regexp)
 	 (looking-at mythryl-string-regexp)
 	 (looking-at mythryl-op-regexp)
