@@ -180,13 +180,13 @@ This is a bold character by default."
   "Regexp matching character constants.")
 
 (defconst mythryl-perl-match-regexps
-  (list "[.]\\(/\\)\\(\\\\.\\|[^/]\\)*\\(/\\)"
-	"[.]\\(|\\)\\(\\\\.\\|[^|]\\)*\\(|\\)")
+  (list "[.]\\(/\\)\\(\\\\[^.]\\|\\\\.\\|[^/\\]\\)*\\(/\\)"
+	"[.]\\(|\\)\\(\\\\[^.]\\|\\\\.\\|[^|\\]\\)*\\(|\\)")
   "Regexps matching ./.../ or .|...| syntaxes.")
 
 (defconst mythryl-string-regexp
   (concat
-   "\\(\"\\([^\"\\]\\|\n\\|\\\\.\\)*\"\\|"
+   "\\(\"\\(\\\\[^.]\\|\\\\.\\|[^\"\\]\\)*\"\\|"
    mythryl-character-constant-regexp
    "\\)"))
 
