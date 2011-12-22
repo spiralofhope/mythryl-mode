@@ -100,6 +100,7 @@
 ;; + indent records differently from braced statements
 ;; + mythryl-interaction-mode
 ;; + more indentation styles
+;; + should not indent lines preceded by a backslash
 
 (require 'custom)
 (require 'font-lock)
