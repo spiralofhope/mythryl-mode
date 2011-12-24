@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.9
+;; Version: 2.5.10
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -949,7 +949,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 		    '(mythryld "^\\([^ \n\t:]+\\):\\([0-9]+\\).* Error:" 1 2)))))
 
 ;; Outline support
-(defvar mythryl-mode-outline-regexp "[ \t{]*\\(\\<\\(fun\\|package\\|herein\\)\\>[^;]*$\\|##\\)")
+(defvar mythryl-mode-outline-regexp "[ \t{]*\\(\\<\\(fun\\|package\\|stipulate\\|herein\\)\\>[^;]*$\\|##\\)")
 ;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
 (defun mythryl-mode-outline-level ()
   (save-excursion
