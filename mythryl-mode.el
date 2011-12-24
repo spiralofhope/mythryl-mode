@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.11
+;; Version: 2.5.12
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -960,7 +960,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 (defcustom mythryl-mode-turn-on-outline t
   "Automatically turn `outline-minor-mode' on."
-  :type 'bool :group 'mythryl)
+  :type 'boolean :group 'mythryl)
 
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
