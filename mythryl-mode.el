@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.8
+;; Version: 2.5.9
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -146,15 +146,23 @@
     (t                                  ()))
   "Face used for package identifiers in mythryl
 
-Example: pkg1::pkg2::"
+Example: pkg1::pkg2::val."
   :group 'mythryl)
 
 (defvar mythryl-mode-structure-face 'mythryl-mode-structure-face)
-(defface  mythryl-mode-structure-face
+(defface mythryl-mode-structure-face
   '((((class color) (background light)) (:foreground "black"))
     (((class color) (background dark))  (:foreground "white"))
     (t                                  ()))
   "Face used for structure characters in mythryl."
+  :group 'mythryl)
+
+(defvar mythryl-mode-type-variable-face 'mythryl-mode-type-variable-face)
+(defface mythryl-mode-type-variable-face
+  '(;;(((class color) (background light)) (:foreground "azure" :weight bold))
+    ;;(((class color) (background dark))  (:foreground "aquamarine" :weight bold))
+    (t                                  (:weight bold :inherit font-lock-type-face)))
+  "Face used for type variables in mythryl."
   :group 'mythryl)
 
 (defvar mythryl-mode-underscore-face 'mythryl-mode-underscore-face)
@@ -853,6 +861,8 @@ Currently, \";\" and \"}\" are defined as electric keys."
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
    (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
 	 (list 0 font-lock-variable-name-face))
+   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]\\)?\\>"
+	 (list 0 mythryl-mode-type-variable-face))
    (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>"
 	 (list 0 font-lock-type-face))
    (list "\\<_\\>"
