@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.10
+;; Version: 2.5.11
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -958,10 +958,16 @@ Currently, \";\" and \"}\" are defined as electric keys."
       (looking-at "[ \t{]*")
       (string-width (match-string 0)))))
 
+(defcustom mythryl-mode-turn-on-outline t
+  "Automatically turn `outline-minor-mode' on."
+  :type 'bool :group 'mythryl)
+
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
-  "Major mode for the Mythryl programming language."
+  "Major mode for the Mythryl programming language.
+
+See also: `mythryl-mode-turn-on-outline'."
   :group 'mythryl
   :abbrev-table mythryl-mode-abbrev-table
   :syntax-table mythryl-mode-syntax-table
@@ -971,10 +977,13 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (set (make-local-variable 'indent-line-function) (function mythryl-indent-line)))
 
   (set (make-local-variable 'compile-command) "mythryld ")
-
+  
   ;; Configure outlines
   (set (make-local-variable 'outline-regexp) mythryl-mode-outline-regexp)
   (set (make-local-variable 'outline-level) (function mythryl-mode-outline-level))
+  (when mythryl-mode-turn-on-outline
+    (when (functionp 'outline-minor-mode)
+      (outline-minor-mode t)))
 
   (set (make-local-variable 'comment-use-syntax) t)
   ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?
