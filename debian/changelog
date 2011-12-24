@@ -1,3 +1,9 @@
+mythryl-mode (2.5.12.deb24) lucid; urgency=low
+
+  * Automatically turn on outline-minor-mode (configurable).
+
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 24 Dec 2011 19:58:43 +0100
+
 mythryl-mode (2.5.10.deb23) lucid; urgency=low
 
   * Add stipulate keyword to outline regexp.
