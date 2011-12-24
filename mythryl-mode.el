@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.13
+;; Version: 2.5.14
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -951,7 +951,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 ;; Outline support
 (defvar mythryl-mode-outline-regexp
   (concat "[ \t{]*\\(\\<\\(fun\\|package\\|stipulate\\|herein\\)\\>"
-	  "\\([^;#]+\\|#[^# ]\\)*" ; Match mythryl expression code (no comments)
+	  "\\([^;#]\\|#[^# ]\\)*" ; Match mythryl expression code (no comments)
 	  "\\($\\|=>\\|#[# ]\\)\\|##\\)"))
 
 ;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
