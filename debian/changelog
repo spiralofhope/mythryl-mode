@@ -1,3 +1,10 @@
+mythryl-mode (2.5.10.deb23) lucid; urgency=low
+
+  * Add stipulate keyword to outline regexp.
+  * Add customizable face for type variables.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 24 Dec 2011 14:46:39 +0100
+
 mythryl-mode (2.5.8.deb22) lucid; urgency=low
 
   * (mythryl-forward-expression): Support expressions with prefix and
