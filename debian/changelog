@@ -1,3 +1,9 @@
+mythryl-mode (2.5.14.deb26) lucid; urgency=low
+
+  * Improve outline regexp for 'fun' statements.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 24 Dec 2011 22:00:06 +0100
+
 mythryl-mode (2.5.12.deb25) lucid; urgency=low
 
   * Automatically turn on outline-minor-mode (configurable).
