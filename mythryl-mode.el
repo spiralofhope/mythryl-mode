@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.14
+;; Version: 2.5.15
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -644,6 +644,7 @@ This includes \"fun..end\", \"where..end\",
 				   (if (mythryl-indent--has-tag sct 'pat)
 				       (progn
 					 (mythryl-indent--del-tags sct 'pat)
+					 (mythryl-indent--add-tags sct 'pst)
 					 mythryl-block-indent-level)
 				     (mythryl-indent--add-tags sct 'pst)
 				     0))))))
@@ -698,11 +699,6 @@ This includes \"fun..end\", \"where..end\",
 				 (setq mae (or (mythryl-end-of-next-expression) mae))
 				 mythryl-case-indent-level))))
 			     ((and
-			       (eq p ?f)
-			       (cond
-				((looking-at "\\<fu?n\\>") (mythryl-indent--add-tags sct 'pat))
-				((looking-at "\\<fi\\>") (- mythryl-if-indent-level)))))
-			     ((and
 			       (eq p ?e)
 			       (cond
 				((looking-at "\\<end\\>") (- mythryl-block-indent-level))
@@ -717,9 +713,13 @@ This includes \"fun..end\", \"where..end\",
 				 0)
 				((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
 				((looking-at "\\<except\\>")
-				 (mythryl-indent--del-tags sct 'pst)
 				 (mythryl-indent--add-tags sct 'pat)
 				 0))))
+			     ((and
+			       (eq p ?f)
+			       (cond
+				((looking-at "\\<fu?n\\>") (mythryl-indent--add-tags sct 'pat) 0)
+				((looking-at "\\<fi\\>") (- mythryl-if-indent-level)))))
 			     ((and
 			       (eq p ?h)
 			       (cond
@@ -950,17 +950,15 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 ;; Outline support
 (defvar mythryl-mode-outline-regexp
-  (concat "[ \t{]*\\(\\<\\(fun\\|package\\|stipulate\\|herein\\)\\>"
+  (concat "[ \t{]*\\(\\<\\(\\(also[ \t]+\\)?\\(fun\\|my\\)\\|package\\|stipulate\\|herein\\)\\>"
 	  "\\([^;#]\\|#[^# ]\\)*" ; Match mythryl expression code (no comments)
 	  "\\($\\|=>\\|#[# ]\\)\\|##\\)"))
 
 ;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
 (defun mythryl-mode-outline-level ()
-  (save-excursion
-    (beginning-of-line)
-    (save-match-data
-      (looking-at "[ \t{]*")
-      (string-width (match-string 0)))))
+  (save-match-data
+    (looking-at "[ \t{]*")
+    (string-width (match-string 0))))
 
 (defcustom mythryl-mode-turn-on-outline t
   "Automatically turn `outline-minor-mode' on."
