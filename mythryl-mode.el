@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.15
+;; Version: 2.5.16
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -539,8 +539,8 @@ This includes \"fun..end\", \"where..end\",
 	       (concat
 		"^[ \t]*\\(=\\|"
 		"#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
-			      "\\|\\<where\\>\\)"
-			      ))  ;; 'where' may be after a package or a code block
+		"\\|\\<where\\>\\)"
+		))  ;; 'where' may be after a package or a code block
 	     nil t)
 	    (goto-char (match-beginning 1))
 	  (goto-char (point-min)))
@@ -671,6 +671,7 @@ This includes \"fun..end\", \"where..end\",
 			      mythryl-brace-indent-level)
 			     ((eq p ?\})
 			      (setq sct (or (cdr sct) (list nil)))
+			      (mythryl-indent--add-tags sct 'fst)
 			      (when mythryl-continued-line-indent-braced-blocks
 				(mythryl-indent--add-tags sct 'pst))
 			      (- mythryl-brace-indent-level))
