@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.16
+;; Version: 2.5.17
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -220,7 +220,7 @@ constructors, pattern identifiers.")
   "*Run upon entering `mythryl-mode'.
 This is a good place to put your preferred key bindings.")
 
-;;; * Indentation support code
+;;; Indentation support code
 
 (defun mythryl-skip-closing ()
   (and (looking-at
@@ -951,7 +951,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 ;; Outline support
 (defvar mythryl-mode-outline-regexp
-  (concat "[ \t{]*\\(\\<\\(\\(also[ \t]+\\)?\\(fun\\|my\\)\\|package\\|stipulate\\|herein\\)\\>"
+  (concat "[ \t{]*\\(\\<\\(\\(also[ \t]+\\)?\\(fun\\|my\\)\\|api\\|generic\\|package\\|stipulate\\|herein\\)\\>"
 	  "\\([^;#]\\|#[^# ]\\)*" ; Match mythryl expression code (no comments)
 	  "\\($\\|=>\\|#[# ]\\)\\|##\\)"))
 
@@ -1021,7 +1021,7 @@ See also: `mythryl-mode-turn-on-outline'."
     	  (list (cadr mythryl-perl-match-regexps) '(1 (7 . ?|)) '(3 (7 . ?|)))
     	  (list mythryl-character-constant-regexp '(1 (7 . ?')) '(3 (7 . ?')))))))
 
-;;; * Mythryl interaction mode
+;;; Mythryl interaction mode
 
 ;;;###autoload
 (defun run-mythryl ()
