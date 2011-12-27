@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.17
+;; Version: 2.5.18
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -399,10 +399,12 @@ This includes \"fun..end\", \"where..end\",
 	     t)))))
     ok))
 
-(defun mythryl-end-of-next-expression () ;; Return end of next mythryl expression
+(defun mythryl-end-of-next-expression (endrgx) ;; Return end of next mythryl expression
   (save-excursion
     (goto-char (match-end 0))
-    (and (mythryl-forward-expression) (point))))
+    (mythryl-skip-whitespace)
+    (if (looking-at endrgx) (point)
+      (and (mythryl-forward-expression) (point)))))
 
 (defun mythryl-indent-comment-line ()
   (save-excursion
@@ -697,7 +699,7 @@ This includes \"fun..end\", \"where..end\",
 			       (cond
 				((looking-at "\\<case\\>")
 				 (mythryl-indent--add-tags sct 'pst)
-				 (setq mae (or (mythryl-end-of-next-expression) mae))
+				 (setq mae (or (mythryl-end-of-next-expression "\\<esac\\>") mae))
 				 mythryl-case-indent-level))))
 			     ((and
 			       (eq p ?e)
@@ -709,7 +711,7 @@ This includes \"fun..end\", \"where..end\",
 				 0)
 				((looking-at "\\<elif\\>")
 				 (mythryl-indent--add-tags sct 'pst)
-				 (setq mae (or (mythryl-end-of-next-expression) mae))
+				 (setq mae (or (mythryl-end-of-next-expression "\\<fi\\>") mae))
 				 (setq li (* -1 mythryl-if-indent-level))
 				 0)
 				((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
@@ -733,7 +735,7 @@ This includes \"fun..end\", \"where..end\",
 			       (cond
 				((looking-at "\\<if\\>")
 				 (mythryl-indent--add-tags sct 'pst)
-				 (setq mae (or (mythryl-end-of-next-expression) mae))
+				 (setq mae (or (mythryl-end-of-next-expression "\\<fi\\>") mae))
 				 mythryl-if-indent-level))))
 			     ((and
 			       (eq p ?p)
