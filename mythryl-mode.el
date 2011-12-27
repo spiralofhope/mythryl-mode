@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.18
+;; Version: 2.5.19
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -721,7 +721,10 @@ This includes \"fun..end\", \"where..end\",
 			     ((and
 			       (eq p ?f)
 			       (cond
-				((looking-at "\\<fu?n\\>") (mythryl-indent--add-tags sct 'pat) 0)
+				((looking-at "\\<fu?n\\>")
+				 (mythryl-indent--add-tags sct 'pat)
+				 (mythryl-indent--del-tags sct 'pst)
+				 0)
 				((looking-at "\\<fi\\>") (- mythryl-if-indent-level)))))
 			     ((and
 			       (eq p ?h)
