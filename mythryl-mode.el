@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.20.edge
+;; Version: 2.5.20.edge.1
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -104,7 +104,6 @@
 (require 'custom)
 (require 'font-lock)
 (require 'derived)
-
 
 ;;;###autoload
 (defgroup mythryl () "Group for customizing mythryl-mode"
@@ -211,10 +210,15 @@ This is a bold character by default."
 (defvar mythryl-word-regexp "[A-Za-z0-9_']+"
   "A regexp matching every kind of mythryl 'word'.
 
-It matches numbers identifiers, package names, operators, types, apis, type
-constructors, pattern identifiers.")
+It matches numbers, identifiers, names for packages, types, apis,
+type constructors, pattern identifiers.")
 
-(defvar mythryl-code-line-regexp "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
+(defvar mythryl-token-regexp
+  (concat "\\(" mythryl-word-regexp "\\|" mythryl-op-regexp "\\)")
+  "A regexp matching Mythryl identifiers and operators")
+
+(defvar mythryl-code-line-regexp
+  "^[ \t]*\\([^#/* \t\n]\\|#[^# \t\n]\\|/[^*\n]\\)")
 
 (defvar mythryl-mode-hook nil
   "*Run upon entering `mythryl-mode'.
@@ -809,8 +813,12 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (define-key mythryl-mode-map (kbd "}") 'mythryl-electric-key)
     (define-key mythryl-mode-map (kbd ";") 'mythryl-electric-key)))
 
-(defvar mythryl-mode-font-lock-keywords
+(defconst mythryl-mode-font-lock-keywords
   (list
+   ;; (list "\\(\\<incl\\>[ \t]+\\)" (list 1 font-lock-builtin-face))
+   (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
+   (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
+   (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
    (list
     (eval-when-compile
       (concat "\\(#[0-9]+\\>\\|-[RWX]\\|"
@@ -866,6 +874,8 @@ Currently, \";\" and \"}\" are defined as electric keys."
    (list (cadr mythryl-perl-match-regexps) (list 0 font-lock-string-face))
    (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
+   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>("
+	 (list 0 font-lock-function-name-face))
    (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
 	 (list 0 font-lock-variable-name-face))
    (list "\\<[A-Z]\\(_[A-Za-z'_0-9]\\)?\\>"
@@ -970,6 +980,105 @@ Currently, \";\" and \"}\" are defined as electric keys."
 (defcustom mythryl-mode-turn-on-outline t
   "Automatically turn `outline-minor-mode' on."
   :type 'boolean :group 'mythryl)
+
+(defface mythryl-symbol-face
+  '((((class color) (background light)) (:foreground "blue" :weight bold :height 1.1))
+    (((class color) (background dark))  (:foreground "cyan" :weight bold :height 1.1))
+    (t                                  (:weight bold :height 1.1)))
+  "Face used for the Unicode 'pretty' symbols for Mythryl."
+  :group 'mythryl)
+
+(defconst mythryl-symbol-table
+  (let ((h (make-hash-table :test 'equal)))
+    (mapcar
+     (lambda (x)
+       (puthash (car x) (cadr x) h))
+     `(
+       ("=>" "▶") ;; ➤ ▶ ➭
+       ("o" "∘") ;; There is also a composition symbol: ⎄
+       ;; ("??" "？")
+       ;; ("::" "：")
+       ("==" "≟")
+       ("and" "∧")
+       ("or" "∨")
+       ("fn" "𝛌")
+       ("end" "◗")
+       ("my" "⊦")
+       ("fun" "⎔") ;;  ·⎔ ⊦⎔
+       ("TRUE" "⊤")
+       ("FALSE" "⊥")
+       ("include" "𝚫") ;; Δ
+       ("package" "⊞") ;; ⬛ ⊞ ⌗
+       ("case" "⋲") ;; ⁅‣  ⋲⟤ ⋲ ‣
+       ("esac" "⋺") ;; ⋺ ⁆
+       ("api" "▣") ;; ▣ ⬜
+       ;; ("generic" "") ;; some langueges use diamond for a 
+       ("if" "❰̵") ;; ◆ ⬙(
+       ("else" "❚") ;; ⬗ ◇
+       ("elif" "❚̵")
+       ("fi" "❱") ;; ⬘
+       ("stipulate" "⬭") ;; ◒
+       ("herein" "⬬") ;;
+       ("where" "◎")
+       ("except" "✽") ;; ★ ⚝
+       ("also" "̶") ;; ⋈
+       ))
+    h))
+
+;; ==
+
+(defun mythryl-prettify-region (b e)
+  "Display pretty Unicode symbols for Mythryl mode"
+  (interactive "r")
+  (with-syntax-table mythryl-mode-syntax-table
+    (save-excursion
+      (goto-char b)
+      (let ((r "\\(\\<\\|^\\)"))
+	(or (looking-at r)
+	    (re-search-backward r nil t)))
+      ;;(remove-text-properties (point) e '((display nil)))
+      (setq e (save-excursion
+		(goto-char e)
+		(or (re-search-forward "\\(\\>\\|$\\)" nil t) e)))
+      (put-text-property (point) e 'display nil)
+      (while (re-search-forward mythryl-token-regexp e t)
+	(let ((s (match-string 0)))
+	  (let ((g (gethash s mythryl-symbol-table)))
+	    (cond
+	     ((not g) nil)
+	     ((stringp g)
+	      (let ((a (match-beginning 0))
+		    (b (match-end 0)))
+		(put-text-property a b 'display g)
+		;; (put-text-property a b 'face 'mythryl-symbol-face)
+		))
+	     (t (funcall g b e)))))))))
+
+(defun mythryl-unprettify-region (b e)
+  "Remove pretty unicode symbols for Mythryl mode."
+  (interactive "r")
+  ;; May interfere with other emacs display software
+  (put-text-property b e 'display nil))
+
+(defvar mythryl-pretty-mode nil)
+(make-variable-buffer-local 'mythryl-pretty-mode)
+(defun mythryl-pretty-mode (&optional arg)
+  "Display pretty Unicode symbols for Mythryl mode"
+  (interactive)
+  (if (cond
+       ((null arg) (not mythryl-pretty-mode))
+       ((> (prefix-numeric-value arg) 0)0))
+      (progn
+	(jit-lock-unregister 'mythryl-unprettify-region)
+	(jit-lock-register 'mythryl-prettify-region)
+	(setq mythryl-pretty-mode t)
+	(run-hooks 'mythryl-pretty-mode-hook)
+	(message "Mythryl Pretty Symbol Mode ON"))
+    (jit-lock-unregister 'mythryl-prettify-region)
+    (jit-lock-register 'mythryl-unprettify-region)
+    (setq mythryl-pretty-mode nil)
+    (message "Mythryl Pretty Symbol Mode OFF")
+    ))
 
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
