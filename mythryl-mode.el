@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.29
+;; Version: 2.5.30
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -625,9 +625,9 @@ This includes \"fun..end\", \"where..end\",
 	     (while (re-search-forward
 		     (eval-when-compile
 		       (concat
-			"\\(" "[][{}()\n\"\'#/;]"
-			"\\|" "[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
-			"\\|" "[A-Za-z0-9_']+" ;; mythryl-word-regexp
+			"\\([][{}()\n\"\'#/;]"
+			"\\|[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
+			"\\|[A-Za-z0-9_']+" ;; mythryl-word-regexp
 			"\\)"))
 		     nil t)
 	       (goto-char (match-beginning 0))
