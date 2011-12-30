@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.20.edge.1
+;; Version: 2.5.20.edge.2
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -240,6 +240,7 @@ This is a good place to put your preferred key bindings.")
 	(eval-when-compile
 	  (concat
 	   "\\(\\("
+	   "[ \t]*=>\\|"
 	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
 	   "[ \t]*=>\\|[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
