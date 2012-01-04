@@ -1,9 +1,9 @@
 ;;; mythryl-mode.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
+;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.32
+;; Version: 2.5.33
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -873,7 +873,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	 (list 1 font-lock-function-name-face))
    (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
 	 (list 0 font-lock-variable-name-face))
-   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]\\)?\\>"
+   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]+\\)?\\>"
 	 (list 0 mythryl-mode-type-variable-face))
    (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>"
 	 (list 0 font-lock-type-face))
