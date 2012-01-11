@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.35
+;; Version: 2.5.36
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -204,7 +204,7 @@ This is a bold character by default."
 
 (defvar mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
-(defvar mythryl-record-name-regexp "[a-z][a-z0-9_]*"
+(defvar mythryl-record-name-regexp "[a-z][a-z0-9_']*"
   "Regexp matching Mythryl record names.")
 
 (defvar mythryl-word-regexp "[A-Za-z0-9_']+"
@@ -236,8 +236,9 @@ This is a good place to put your preferred key bindings.")
 	  (concat
 	   "\\(\\("
 	   "[ \t]*=>\\|"
-	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
-	   "[ \t]*\\(=>\\|:\\)\\|[]}); ]\\|"
+	   "[a-z][a-z0-9_']*" ;; mythryl-record-name-regexp
+	   "[ \t]*\\(=>\\|:\\($\\|\\<\\|[ \t]+\\)\\)\\|"
+	   "[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
@@ -653,8 +654,9 @@ This includes \"fun..end\", \"where..end\",
 				       0)))))
 				 ((and (eq p ?:) (= mal 1)
 				       (progn
-					 (mythryl-indent--add-tags sct 'pst)
-					 0))))))
+					 (mythryl-indent--add-tags sct 'fst)
+				 	 0)))
+				 )))
 			     ((eq p ?\n)
 			      (mythryl-indent--set-tag
 			       sct 'fst
