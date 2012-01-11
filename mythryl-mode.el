@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.34
+;; Version: 2.5.35
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -237,7 +237,7 @@ This is a good place to put your preferred key bindings.")
 	   "\\(\\("
 	   "[ \t]*=>\\|"
 	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
-	   "[ \t]*=>\\|[]}); ]\\|"
+	   "[ \t]*\\(=>\\|:\\)\\|[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
@@ -636,20 +636,25 @@ This includes \"fun..end\", \"where..end\",
 		 (setq i (+ i
 			    (cond
 			     ((let ((mal (- mae (point))))
-				(and
-				 (eq p ?=)
-				 (cond
-				  ((= mal 1)
-				   (mythryl-indent--del-tags sct 'pat)
-				   0)
-				  ((and (= mal 2) (eq (char-after (+ (point) 1)) ?>))
-				   (if (mythryl-indent--has-tag sct 'pat)
+				(cond
+				 ((and
+				   (eq p ?=)
+				   (cond
+				    ((= mal 1)
+				     (mythryl-indent--del-tags sct 'pat)
+				     0)
+				    ((and (= mal 2) (eq (char-after (+ (point) 1)) ?>))
+				     (if (mythryl-indent--has-tag sct 'pat)
+					 (progn
+					   (mythryl-indent--del-tags sct 'pat)
+					   (mythryl-indent--add-tags sct 'pst)
+					   mythryl-block-indent-level)
+				       (mythryl-indent--add-tags sct 'pst)
+				       0)))))
+				 ((and (eq p ?:) (= mal 1)
 				       (progn
-					 (mythryl-indent--del-tags sct 'pat)
 					 (mythryl-indent--add-tags sct 'pst)
-					 mythryl-block-indent-level)
-				     (mythryl-indent--add-tags sct 'pst)
-				     0))))))
+					 0))))))
 			     ((eq p ?\n)
 			      (mythryl-indent--set-tag
 			       sct 'fst
