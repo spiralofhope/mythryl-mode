@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.36
+;; Version: 2.5.37
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -616,9 +616,11 @@ This includes \"fun..end\", \"where..end\",
 	       ;; pkg: between the package word and '{'
 	       ;; pst: before the beginning of a new statement
 	       ;; fst: at the first line of a statement
+	       brc ;; True when identing a line starting with a brace
 	       )
 	   (backward-to-indentation 0)
 	   (mythryl-skip-closing-2)
+	   (setq brc (looking-at "[ \t]*\\([A-Z][A-Z0-9_']+[ \t]*\\)?{"))
 	   (narrow-to-region bl (point))
 	   (goto-char (point-min))
 	   (save-excursion
@@ -774,7 +776,7 @@ This includes \"fun..end\", \"where..end\",
 	   (goto-char (point-max)) (widen)
 	   (setq b (car b))
 	   (backward-to-indentation 0)
-	   (setq i (+ (if (mythryl-indent--any-tags sct 'fst 'pst) 0 4) li b i))
+	   (setq i (+ (if (or brc (mythryl-indent--any-tags sct 'fst 'pst)) 0 4) li b i))
 	   (unless (= oi i)
 	     (delete-region
 	      (point)
