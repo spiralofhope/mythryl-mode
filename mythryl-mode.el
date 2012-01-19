@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.37
+;; Version: 2.5.38
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -578,6 +578,16 @@ This includes \"fun..end\", \"where..end\",
 	(forward-to-indentation 0))))
   (mythryl-skip-closing))
 
+(defun mythryl-line-has-opening-brace ()
+  (save-excursion
+    (save-restriction
+      (narrow-to-region (point) (line-end-position))
+      (let (ok)
+	(while
+	    (and (not (setq ok (looking-at "[ \t]*{")))
+		 (mythryl-forward-expression)))
+	ok))))
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -620,7 +630,7 @@ This includes \"fun..end\", \"where..end\",
 	       )
 	   (backward-to-indentation 0)
 	   (mythryl-skip-closing-2)
-	   (setq brc (looking-at "[ \t]*\\([A-Z][A-Z0-9_']+[ \t]*\\)?{"))
+	   (setq brc (mythryl-line-has-opening-brace))
 	   (narrow-to-region bl (point))
 	   (goto-char (point-min))
 	   (save-excursion
