@@ -1,3 +1,10 @@
+mythryl-mode (2.5.39.deb28) lucid; urgency=low
+
+  * Created mythryl-forward-token.
+  * Improve indentation of lines containing opening braces withing expressions.
+  
+ -- Michele Bini <michele.bini@gmail.com>  Thu, 19 Jan 2012 22:21:38 +0100
+
 mythryl-mode (2.5.37.deb27) lucid; urgency=low
 
   * Improved indentation of lines starting with a brace within an
