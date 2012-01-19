@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.38
+;; Version: 2.5.39
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -301,6 +301,25 @@ This includes \"fun..end\", \"where..end\",
 	   (looking-at "\\<except\\>")))
 	(mythryl-forward-expression)))))
 
+(defun mythryl-forward-token ()
+  (interactive)
+  (mythryl-skip-whitespace)
+  (cond
+   ((or
+    (looking-at "/[*]")
+    (looking-at "#[ #]"))
+    nil)
+   ((or
+     (looking-at mythryl-op-regexp)
+     (looking-at mythryl-word-regexp)
+     (looking-at mythryl-string-regexp)
+     (looking-at mythryl-character-constant-regexp)
+     (looking-at (car mythryl-perl-match-regexps))
+     (looking-at (cadr mythryl-perl-match-regexps))
+     (looking-at "."))
+    (goto-char (match-end 0))
+    (point))))
+
 (defun mythryl-forward-expression (&optional after-prefix)
   (interactive)
   (save-match-data
@@ -578,6 +597,13 @@ This includes \"fun..end\", \"where..end\",
 	(forward-to-indentation 0))))
   (mythryl-skip-closing))
 
+(defvar mythryl-token-regexp
+  (concat
+   "\\([][{}()\n\"\'#/;]"
+   "\\|[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
+   "\\|[A-Za-z0-9_']+" ;; mythryl-word-regexp
+   "\\)"))
+
 (defun mythryl-line-has-opening-brace ()
   (save-excursion
     (save-restriction
@@ -585,7 +611,7 @@ This includes \"fun..end\", \"where..end\",
       (let (ok)
 	(while
 	    (and (not (setq ok (looking-at "[ \t]*{")))
-		 (mythryl-forward-expression)))
+		 (mythryl-forward-token)))
 	ok))))
 
 ;; See also:
@@ -634,14 +660,7 @@ This includes \"fun..end\", \"where..end\",
 	   (narrow-to-region bl (point))
 	   (goto-char (point-min))
 	   (save-excursion
-	     (while (re-search-forward
-		     (eval-when-compile
-		       (concat
-			"\\([][{}()\n\"\'#/;]"
-			"\\|[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
-			"\\|[A-Za-z0-9_']+" ;; mythryl-word-regexp
-			"\\)"))
-		     nil t)
+	     (while (re-search-forward mythryl-token-regexp nil t)
 	       (goto-char (match-beginning 0))
 	       (let ((p (char-after (point)))
 		     (mae (match-end 0)))
