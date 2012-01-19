@@ -1,3 +1,26 @@
+mythryl-mode (2.5.37.deb27) lucid; urgency=low
+
+  * Improved indentation of lines starting with a brace within an
+    expression.
+  * Fix matching of record names and indentation of multi-line record type
+    declarations.
+  * Fix indentation of multi-line record type declarations.
+  * Improve highlighting of "package pkg = foo::bar::pkg" lines.
+  * Fix indentation in presence of operator identifiers like "(<=>)".
+  * Fix regexp for highlighting type variables.
+  * Fix highlighting of function names.
+  * Improved highlighting of function names and packages.
+  * Improved indentation of lines beginning with '=>'.
+  * Correctly align declarations starting with a 'fun' keyword followed by
+    newline.
+  * Correctly indent incomplete 'if' and 'case' expressions.
+  * Included 'api' and 'generic' in outline regexp.
+  * Expanded outline regexp.
+  * Fix portion of the outline regexp taking too long to match.
+  * Indentation fix for patterns.
+    
+ -- Michele Bini <michele.bini@gmail.com>  Thu, 19 Jan 2012 19:18:27 +0100
+
 mythryl-mode (2.5.14.deb26) lucid; urgency=low
 
   * Improve outline regexp for 'fun' statements.

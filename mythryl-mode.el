@@ -1,9 +1,9 @@
 ;;; mythryl-mode.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
+;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.14
+;; Version: 2.5.37
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -105,7 +105,6 @@
 (require 'font-lock)
 (require 'derived)
 
-
 ;;;###autoload
 (defgroup mythryl () "Group for customizing mythryl-mode"
   :prefix "mythryl-" :group 'languages)
@@ -205,7 +204,7 @@ This is a bold character by default."
 
 (defvar mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
-(defvar mythryl-record-name-regexp "[a-z][a-z0-9_]*"
+(defvar mythryl-record-name-regexp "[a-z][a-z0-9_']*"
   "Regexp matching Mythryl record names.")
 
 (defvar mythryl-word-regexp "[A-Za-z0-9_']+"
@@ -220,7 +219,7 @@ constructors, pattern identifiers.")
   "*Run upon entering `mythryl-mode'.
 This is a good place to put your preferred key bindings.")
 
-;;; * Indentation support code
+;;; Indentation support code
 
 (defun mythryl-skip-closing ()
   (and (looking-at
@@ -236,8 +235,10 @@ This is a good place to put your preferred key bindings.")
 	(eval-when-compile
 	  (concat
 	   "\\(\\("
-	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
-	   "[ \t]*=>\\|[]}); ]\\|"
+	   "[ \t]*=>\\|"
+	   "[a-z][a-z0-9_']*" ;; mythryl-record-name-regexp
+	   "[ \t]*\\(=>\\|:\\($\\|\\<\\|[ \t]+\\)\\)\\|"
+	   "[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
@@ -374,7 +375,7 @@ This includes \"fun..end\", \"where..end\",
 	t)
        ((< (point) (point-max))
 	(goto-char (+ (point) 1))
-	t)))))
+	(not after-prefix))))))
 
 (defun mythryl-forward-statement ()
   (interactive)
@@ -399,10 +400,12 @@ This includes \"fun..end\", \"where..end\",
 	     t)))))
     ok))
 
-(defun mythryl-end-of-next-expression () ;; Return end of next mythryl expression
+(defun mythryl-end-of-next-expression (endrgx) ;; Return end of next mythryl expression
   (save-excursion
     (goto-char (match-end 0))
-    (and (mythryl-forward-expression) (point))))
+    (mythryl-skip-whitespace)
+    (if (looking-at endrgx) (point)
+      (and (mythryl-forward-expression) (point)))))
 
 (defun mythryl-indent-comment-line ()
   (save-excursion
@@ -539,8 +542,8 @@ This includes \"fun..end\", \"where..end\",
 	       (concat
 		"^[ \t]*\\(=\\|"
 		"#\\($\\|[\t #!]\\).*" ;; mythryl-line-comment-regexp
-			      "\\|\\<where\\>\\)"
-			      ))  ;; 'where' may be after a package or a code block
+		"\\|\\<where\\>\\)"
+		))  ;; 'where' may be after a package or a code block
 	     nil t)
 	    (goto-char (match-beginning 1))
 	  (goto-char (point-min)))
@@ -613,18 +616,20 @@ This includes \"fun..end\", \"where..end\",
 	       ;; pkg: between the package word and '{'
 	       ;; pst: before the beginning of a new statement
 	       ;; fst: at the first line of a statement
+	       brc ;; True when identing a line starting with a brace
 	       )
 	   (backward-to-indentation 0)
 	   (mythryl-skip-closing-2)
+	   (setq brc (looking-at "[ \t]*\\([A-Z][A-Z0-9_']+[ \t]*\\)?{"))
 	   (narrow-to-region bl (point))
 	   (goto-char (point-min))
 	   (save-excursion
 	     (while (re-search-forward
 		     (eval-when-compile
 		       (concat
-			"\\(" "[][{}()\n\"\'#/;]"
-			"\\|" "[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
-			"\\|" "[A-Za-z0-9_']+" ;; mythryl-word-regexp
+			"\\([][{}()\n\"\'#/;]"
+			"\\|[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
+			"\\|[A-Za-z0-9_']+" ;; mythryl-word-regexp
 			"\\)"))
 		     nil t)
 	       (goto-char (match-beginning 0))
@@ -634,19 +639,26 @@ This includes \"fun..end\", \"where..end\",
 		 (setq i (+ i
 			    (cond
 			     ((let ((mal (- mae (point))))
-				(and
-				 (eq p ?=)
-				 (cond
-				  ((= mal 1)
-				   (mythryl-indent--del-tags sct 'pat)
-				   0)
-				  ((and (= mal 2) (eq (char-after (+ (point) 1)) ?>))
-				   (if (mythryl-indent--has-tag sct 'pat)
+				(cond
+				 ((and
+				   (eq p ?=)
+				   (cond
+				    ((= mal 1)
+				     (mythryl-indent--del-tags sct 'pat)
+				     0)
+				    ((and (= mal 2) (eq (char-after (+ (point) 1)) ?>))
+				     (if (mythryl-indent--has-tag sct 'pat)
+					 (progn
+					   (mythryl-indent--del-tags sct 'pat)
+					   (mythryl-indent--add-tags sct 'pst)
+					   mythryl-block-indent-level)
+				       (mythryl-indent--add-tags sct 'pst)
+				       0)))))
+				 ((and (eq p ?:) (= mal 1)
 				       (progn
-					 (mythryl-indent--del-tags sct 'pat)
-					 mythryl-block-indent-level)
-				     (mythryl-indent--add-tags sct 'pst)
-				     0))))))
+					 (mythryl-indent--add-tags sct 'fst)
+				 	 0)))
+				 )))
 			     ((eq p ?\n)
 			      (mythryl-indent--set-tag
 			       sct 'fst
@@ -670,6 +682,7 @@ This includes \"fun..end\", \"where..end\",
 			      mythryl-brace-indent-level)
 			     ((eq p ?\})
 			      (setq sct (or (cdr sct) (list nil)))
+			      (mythryl-indent--add-tags sct 'fst)
 			      (when mythryl-continued-line-indent-braced-blocks
 				(mythryl-indent--add-tags sct 'pst))
 			      (- mythryl-brace-indent-level))
@@ -695,13 +708,8 @@ This includes \"fun..end\", \"where..end\",
 			       (cond
 				((looking-at "\\<case\\>")
 				 (mythryl-indent--add-tags sct 'pst)
-				 (setq mae (or (mythryl-end-of-next-expression) mae))
+				 (setq mae (or (mythryl-end-of-next-expression "\\<esac\\>") mae))
 				 mythryl-case-indent-level))))
-			     ((and
-			       (eq p ?f)
-			       (cond
-				((looking-at "\\<fu?n\\>") (mythryl-indent--add-tags sct 'pat))
-				((looking-at "\\<fi\\>") (- mythryl-if-indent-level)))))
 			     ((and
 			       (eq p ?e)
 			       (cond
@@ -712,14 +720,22 @@ This includes \"fun..end\", \"where..end\",
 				 0)
 				((looking-at "\\<elif\\>")
 				 (mythryl-indent--add-tags sct 'pst)
-				 (setq mae (or (mythryl-end-of-next-expression) mae))
+				 (setq mae (or (mythryl-end-of-next-expression "\\<fi\\>") mae))
 				 (setq li (* -1 mythryl-if-indent-level))
 				 0)
 				((looking-at "\\<esac\\>") (- mythryl-case-indent-level))
 				((looking-at "\\<except\\>")
-				 (mythryl-indent--del-tags sct 'pst)
 				 (mythryl-indent--add-tags sct 'pat)
+				 (mythryl-indent--del-tags sct 'pst)
 				 0))))
+			     ((and
+			       (eq p ?f)
+			       (cond
+				((looking-at "\\<fu?n\\>")
+				 (mythryl-indent--add-tags sct 'pat)
+				 (mythryl-indent--del-tags sct 'pst)
+				 0)
+				((looking-at "\\<fi\\>") (- mythryl-if-indent-level)))))
 			     ((and
 			       (eq p ?h)
 			       (cond
@@ -732,7 +748,7 @@ This includes \"fun..end\", \"where..end\",
 			       (cond
 				((looking-at "\\<if\\>")
 				 (mythryl-indent--add-tags sct 'pst)
-				 (setq mae (or (mythryl-end-of-next-expression) mae))
+				 (setq mae (or (mythryl-end-of-next-expression "\\<fi\\>") mae))
 				 mythryl-if-indent-level))))
 			     ((and
 			       (eq p ?p)
@@ -760,7 +776,7 @@ This includes \"fun..end\", \"where..end\",
 	   (goto-char (point-max)) (widen)
 	   (setq b (car b))
 	   (backward-to-indentation 0)
-	   (setq i (+ (if (mythryl-indent--any-tags sct 'fst 'pst) 0 4) li b i))
+	   (setq i (+ (if (or brc (mythryl-indent--any-tags sct 'fst 'pst)) 0 4) li b i))
 	   (unless (= oi i)
 	     (delete-region
 	      (point)
@@ -804,6 +820,9 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 (defvar mythryl-mode-font-lock-keywords
   (list
+   (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
+   (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(\\([a-z][a-z'_0-9]*::\\)*" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
+   (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
    (list
     (eval-when-compile
       (concat "\\(#[0-9]+\\>\\|-[RWX]\\|"
@@ -859,9 +878,11 @@ Currently, \";\" and \"}\" are defined as electric keys."
    (list (cadr mythryl-perl-match-regexps) (list 0 font-lock-string-face))
    (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
+   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>("
+	 (list 1 font-lock-function-name-face))
    (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
 	 (list 0 font-lock-variable-name-face))
-   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]\\)?\\>"
+   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]+\\)?\\>"
 	 (list 0 mythryl-mode-type-variable-face))
    (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>"
 	 (list 0 font-lock-type-face))
@@ -950,17 +971,15 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 ;; Outline support
 (defvar mythryl-mode-outline-regexp
-  (concat "[ \t{]*\\(\\<\\(fun\\|package\\|stipulate\\|herein\\)\\>"
+  (concat "[ \t{]*\\(\\<\\(\\(also[ \t]+\\)?\\(fun\\|my\\)\\|api\\|generic\\|package\\|stipulate\\|herein\\)\\>"
 	  "\\([^;#]\\|#[^# ]\\)*" ; Match mythryl expression code (no comments)
 	  "\\($\\|=>\\|#[# ]\\)\\|##\\)"))
 
 ;; Other version: "[ \t{]*\\<\\(fun\\|package\\|stipulate\\|herein\\|where\\)\\>"
 (defun mythryl-mode-outline-level ()
-  (save-excursion
-    (beginning-of-line)
-    (save-match-data
-      (looking-at "[ \t{]*")
-      (string-width (match-string 0)))))
+  (save-match-data
+    (looking-at "[ \t{]*")
+    (string-width (match-string 0))))
 
 (defcustom mythryl-mode-turn-on-outline t
   "Automatically turn `outline-minor-mode' on."
@@ -1022,7 +1041,7 @@ See also: `mythryl-mode-turn-on-outline'."
     	  (list (cadr mythryl-perl-match-regexps) '(1 (7 . ?|)) '(3 (7 . ?|)))
     	  (list mythryl-character-constant-regexp '(1 (7 . ?')) '(3 (7 . ?')))))))
 
-;;; * Mythryl interaction mode
+;;; Mythryl interaction mode
 
 ;;;###autoload
 (defun run-mythryl ()
