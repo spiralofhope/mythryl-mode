@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.39
+;; Version: 2.5.40
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -849,7 +849,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 (defvar mythryl-mode-font-lock-keywords
   (list
-   (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
+   (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\(::" mythryl-word-regexp "\\)*" "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
    (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(\\([a-z][a-z'_0-9]*::\\)*" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
    (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
    (list

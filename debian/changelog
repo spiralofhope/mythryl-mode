@@ -1,3 +1,9 @@
+mythryl-mode (2.5.40.deb29) lucid; urgency=low
+
+  * Improve highlighting of 'package a = x::y' lines.
+
+ -- Michele Bini <michele.bini@gmail.com>  Sat, 21 Jan 2012 00:49:44 +0100
+
 mythryl-mode (2.5.39.deb28) lucid; urgency=low
 
   * Created mythryl-forward-token.
