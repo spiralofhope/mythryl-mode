@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.40
+;; Version: 2.5.41
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -852,44 +852,43 @@ Currently, \";\" and \"}\" are defined as electric keys."
    (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\(::" mythryl-word-regexp "\\)*" "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
    (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(\\([a-z][a-z'_0-9]*::\\)*" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
    (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
+   (list "\\(#[1-9][0-9]*\\|-[RWX]\\)" (list 0 font-lock-builtin-face))
    (list
     (eval-when-compile
-      (concat "\\(#[0-9]+\\>\\|-[RWX]\\|"
-             (regexp-opt
-              (list
-	       "print"
-
-   	       ;;; From src/app/makelib/main/makelib-g.pkg
-   	       "exit" "in" "bash" "system" "round" "atoi" "atod" "basename" "dirname" "trim" "die"
-
-	       ;; maybe reconsider: "join'" and "shuffle'"
-   	       "chomp" "chdir" "environ" "explode" "factors" "fields" "filter" "fscanf" "getcwd"
-   	       "getenv" "getpid" "getppid" "getuid" "geteuid" "getgid" "getegid" "getgroups"
-   	       "getlogin" "getpgrp" "setgid" "setpgid" "setsid" "setuid" "implode" "iseven"
-   	       "isodd" "isprime" "join" "join'" "lstat" "mkdir" "now" "product" "rename" "rmdir"
-   	       "shuffle" "shuffle'" "sleep" "sort" "sorted" "scanf" "sscanf" "stat" "strcat"
-   	       "strlen" "strsort" "struniqsort" "sum" "symlink" "time" "tolower" "toupper"
-   	       "tokens" "uniquesort" "unlink" "words"
-
-   	       "arg0" "argv"
-
-               "isfile" "isdir" "ispipe" "issymlink" "issocket" "ischardev" "isblockdev"
-
-   	       "mayread" "maywrite" "mayexecute"
-
-   	       "eval" "evali" "evalf" "evals" "evalli" "evallf" "evalls"
-
-   	       ;; * from src/lib/src/lib/thread-kit/src/core-thread-kit/
-
-   	       ;; TODO
-
-   	       ;; ** from src/lib/src/lib/thread-kit/src/core-thread-kit/thread.pkg
-   	       "make_thread" "reset" "notify_and_dispatch" "thread_done" "yield" ;; TODO: review
-	       
-   	       ) 'words)
-             "\\)"))
+      (regexp-opt
+       (list
+	"print"
+	
+   	;; From src/app/makelib/main/makelib-g.pkg
+	"exit" "in" "bash" "system" "round" "atoi" "atod" "basename" "dirname" "trim" "die"
+	
+	;; maybe reconsider: "join'" and "shuffle'"
+	"chomp" "chdir" "environ" "explode" "factors" "fields" "filter" "fscanf" "getcwd"
+	"getenv" "getpid" "getppid" "getuid" "geteuid" "getgid" "getegid" "getgroups"
+	"getlogin" "getpgrp" "setgid" "setpgid" "setsid" "setuid" "implode" "iseven"
+	"isodd" "isprime" "join" "join'" "lstat" "mkdir" "now" "product" "rename" "rmdir"
+	"shuffle" "shuffle'" "sleep" "sort" "sorted" "scanf" "sscanf" "stat" "strcat"
+	"strlen" "strsort" "struniqsort" "sum" "symlink" "time" "tolower" "toupper"
+	"tokens" "uniquesort" "unlink" "words"
+	
+	"arg0" "argv"
+	
+	"isfile" "isdir" "ispipe" "issymlink" "issocket" "ischardev" "isblockdev"
+	
+	"mayread" "maywrite" "mayexecute"
+	
+	"eval" "evali" "evalf" "evals" "evalli" "evallf" "evalls"
+	
+	;; * from src/lib/src/lib/thread-kit/src/core-thread-kit/
+	
+	;; TODO
+	
+	;; ** from src/lib/src/lib/thread-kit/src/core-thread-kit/thread.pkg
+	"make_thread" "reset" "notify_and_dispatch" "thread_done" "yield" ;; TODO: review
+	
+	) 'words))
     (list 1 font-lock-builtin-face))
-   (list "^#DO\\>" 0 (list font-lock-preprocessor-face))
+   (list "^#DO\\>" (list 0 font-lock-preprocessor-face))
    (list
     (eval-when-compile
       (regexp-opt
@@ -901,16 +900,14 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	     "my" "nonfix" "op" "or" "overload" "package" "printf"
 	     "raise" "rec" "sharing" "sprintf" "stipulate" "type"
 	     "val" "where" "with" "withtype") 'words))
-    (list 1 font-lock-keyword-face))
+    (list 0 font-lock-keyword-face))
    (list mythryl-character-constant-regexp  (list 0 font-lock-string-face))
    (list (car mythryl-perl-match-regexps) (list 0 font-lock-string-face))
    (list (cadr mythryl-perl-match-regexps) (list 0 font-lock-string-face))
    (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
-   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>("
-	 (list 1 font-lock-function-name-face))
-   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
-	 (list 0 font-lock-variable-name-face))
+   (list "\\(\\([.#]\\|\\<\\)[a-z][a-zA-Z'_0-9]*\\)(" (list 1 font-lock-function-name-face))
+   (list "\\([.#]\\|\\<\\)[a-z][a-zA-Z'_0-9]*" (list 0 font-lock-variable-name-face))
    (list "\\<[A-Z]\\(_[A-Za-z'_0-9]+\\)?\\>"
 	 (list 0 mythryl-mode-type-variable-face))
    (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>"
