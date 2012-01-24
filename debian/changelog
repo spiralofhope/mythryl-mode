@@ -1,3 +1,10 @@
+mythryl-mode (2.5.43.deb30) lucid; urgency=low
+
+  * Improve support for ./.../ strings.
+  * Highlighting of identifiers like #a, .a, -R, -W, -X.
+
+ -- Michele Bini <michele.bini@gmail.com>  Tue, 24 Jan 2012 20:36:28 +0100
+
 mythryl-mode (2.5.40.deb29) lucid; urgency=low
 
   * Improve highlighting of 'package a = x::y' lines.
