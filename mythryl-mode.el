@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.42
+;; Version: 2.5.43
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -186,7 +186,7 @@ This is a bold character by default."
   "\\<\\('\\)\\(\\\\.\\|[^']\\)\\('\\)"
   "Regexp matching character constants.")
 
-(defconst mythryl-perlish-regexp
+(defvar mythryl-perlish-regexp
   (concat "[.]"
 	  "\\(\\(/[^/]*/\\)+"
 	  "\\|\\(|[^|]*|\\)+"
