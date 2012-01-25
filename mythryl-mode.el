@@ -1,9 +1,9 @@
 ;;; mythryl-mode.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com> aka Rev22
+;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.20.edge.3
+;; Version: 2.5.44.edge.3
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -186,10 +186,14 @@ This is a bold character by default."
   "\\<\\('\\)\\(\\\\.\\|[^']\\)\\('\\)"
   "Regexp matching character constants.")
 
-(defvar mythryl-perl-match-regexps
-  (list "[.]\\(/\\)\\(\\\\[^.]\\|\\\\.\\|[^/\\]\\)*\\(/\\)"
-	"[.]\\(|\\)\\(\\\\[^.]\\|\\\\.\\|[^|\\]\\)*\\(|\\)")
-  "Regexps matching ./.../ or .|...| syntaxes.")
+(defvar mythryl-perlish-regexp
+  (concat "[.]"
+	  "\\(\\(/[^/]*/\\)+"
+	  "\\|\\(|[^|]*|\\)+"
+	  "\\|\\(#[^#]*#\\)+"
+	  "\\|\\(<[^>]*>\\)\\(>[^>]*>\\)*"
+	  "\\)")
+  "Regexp matching ./.../ or similar syntaxes.")
 
 (defvar mythryl-string-regexp
   (concat
@@ -204,7 +208,7 @@ This is a bold character by default."
 
 (defvar mythryl-op-regexp "[\\!%&$+/:<=>?@~|*^-]+")
 
-(defvar mythryl-record-name-regexp "[a-z][a-z0-9_]*"
+(defvar mythryl-record-name-regexp "[a-z][a-z0-9_']*"
   "Regexp matching Mythryl record names.")
 
 (defvar mythryl-word-regexp "[A-Za-z0-9_']+"
@@ -241,8 +245,9 @@ This is a good place to put your preferred key bindings.")
 	  (concat
 	   "\\(\\("
 	   "[ \t]*=>\\|"
-	   "[a-z][a-z0-9_]*" ;; mythryl-record-name-regexp
-	   "[ \t]*=>\\|[]}); ]\\|"
+	   "[a-z][a-z0-9_']*" ;; mythryl-record-name-regexp
+	   "[ \t]*\\(=>\\|:\\($\\|\\<\\|[ \t]+\\)\\)\\|"
+	   "[]}); ]\\|"
 	   (regexp-opt (mapcar 'symbol-name '(end fi esac herein elif also else where)) 'words)
 	   "\\) *\\)+")))
        (goto-char (match-end 0))))
@@ -304,6 +309,23 @@ This includes \"fun..end\", \"where..end\",
 	   (looking-at "\\<where\\>")
 	   (looking-at "\\<except\\>")))
 	(mythryl-forward-expression)))))
+
+(defun mythryl-forward-token ()
+  (interactive)
+  (mythryl-skip-whitespace)
+  (cond
+   ((or
+    (looking-at "/[*]")
+    (looking-at "#[ #]"))
+    nil)
+   ((or
+     (looking-at mythryl-op-regexp)
+     (looking-at mythryl-word-regexp)
+     (looking-at mythryl-string-regexp)
+     (looking-at mythryl-perlish-regexp)
+     (looking-at "."))
+    (goto-char (match-end 0))
+    (point))))
 
 (defun mythryl-forward-expression (&optional after-prefix)
   (interactive)
@@ -371,15 +393,14 @@ This includes \"fun..end\", \"where..end\",
 	 (looking-at mythryl-word-regexp)
 	 (looking-at mythryl-string-regexp)
 	 (looking-at mythryl-character-constant-regexp)
-	 (looking-at (car mythryl-perl-match-regexps))
-	 (looking-at (cadr mythryl-perl-match-regexps))
+	 (looking-at mythryl-perlish-regexp)
 	 )
 	(goto-char (match-end 0))
 	(mythryl-skip-tail-expressions)
 	t)
        ((< (point) (point-max))
 	(goto-char (+ (point) 1))
-	t)))))
+	(not after-prefix))))))
 
 (defun mythryl-forward-statement ()
   (interactive)
@@ -582,6 +603,23 @@ This includes \"fun..end\", \"where..end\",
 	(forward-to-indentation 0))))
   (mythryl-skip-closing))
 
+(defvar mythryl-token-regexp
+  (concat
+   "\\([][{}()\n\"\'#/;.]"
+   "\\|[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
+   "\\|[A-Za-z0-9_']+" ;; mythryl-word-regexp
+   "\\)"))
+
+(defun mythryl-line-has-opening-brace ()
+  (save-excursion
+    (save-restriction
+      (narrow-to-region (point) (line-end-position))
+      (let (ok)
+	(while
+	    (and (not (setq ok (looking-at "[ \t]*{")))
+		 (mythryl-forward-token)))
+	ok))))
+
 ;; See also:
 ;; http://mythryl.org/my-Indentation.html
 ;; http://mythryl.org/my-If_statements.html
@@ -620,20 +658,15 @@ This includes \"fun..end\", \"where..end\",
 	       ;; pkg: between the package word and '{'
 	       ;; pst: before the beginning of a new statement
 	       ;; fst: at the first line of a statement
+	       brc ;; True when identing a line starting with a brace
 	       )
 	   (backward-to-indentation 0)
 	   (mythryl-skip-closing-2)
+	   (setq brc (mythryl-line-has-opening-brace))
 	   (narrow-to-region bl (point))
 	   (goto-char (point-min))
 	   (save-excursion
-	     (while (re-search-forward
-		     (eval-when-compile
-		       (concat
-			"\\([][{}()\n\"\'#/;]"
-			"\\|[\\!%&$+/:<=>?@~|*^-]+" ;; mythryl-op-regexp
-			"\\|[A-Za-z0-9_']+" ;; mythryl-word-regexp
-			"\\)"))
-		     nil t)
+	     (while (re-search-forward mythryl-token-regexp nil t)
 	       (goto-char (match-beginning 0))
 	       (let ((p (char-after (point)))
 		     (mae (match-end 0)))
@@ -641,24 +674,34 @@ This includes \"fun..end\", \"where..end\",
 		 (setq i (+ i
 			    (cond
 			     ((let ((mal (- mae (point))))
-				(and
-				 (eq p ?=)
-				 (cond
-				  ((= mal 1)
-				   (mythryl-indent--del-tags sct 'pat)
-				   0)
-				  ((and (= mal 2) (eq (char-after (+ (point) 1)) ?>))
-				   (if (mythryl-indent--has-tag sct 'pat)
+				(cond
+				 ((and
+				   (eq p ?=)
+				   (cond
+				    ((= mal 1)
+				     (mythryl-indent--del-tags sct 'pat)
+				     0)
+				    ((and (= mal 2) (eq (char-after (+ (point) 1)) ?>))
+				     (if (mythryl-indent--has-tag sct 'pat)
+					 (progn
+					   (mythryl-indent--del-tags sct 'pat)
+					   (mythryl-indent--add-tags sct 'pst)
+					   mythryl-block-indent-level)
+				       (mythryl-indent--add-tags sct 'pst)
+				       0)))))
+				 ((and (eq p ?:) (= mal 1)
 				       (progn
-					 (mythryl-indent--del-tags sct 'pat)
-					 (mythryl-indent--add-tags sct 'pst)
-					 mythryl-block-indent-level)
-				     (mythryl-indent--add-tags sct 'pst)
-				     0))))))
+					 (mythryl-indent--add-tags sct 'fst)
+				 	 0)))
+				 )))
 			     ((eq p ?\n)
 			      (mythryl-indent--set-tag
 			       sct 'fst
 			       (mythryl-indent--has-tag sct 'pst))
+			      0)
+			     ((and (eq p ?.) (looking-at mythryl-perlish-regexp))
+			      (mythryl-indent--del-tags sct 'pst)
+			      (setq mae (match-end 0))
 			      0)
 			     ((memq p '(?\' ?\" ?# ?/))
 			      (cond
@@ -772,7 +815,7 @@ This includes \"fun..end\", \"where..end\",
 	   (goto-char (point-max)) (widen)
 	   (setq b (car b))
 	   (backward-to-indentation 0)
-	   (setq i (+ (if (mythryl-indent--any-tags sct 'fst 'pst) 0 4) li b i))
+	   (setq i (+ (if (or brc (mythryl-indent--any-tags sct 'fst 'pst)) 0 4) li b i))
 	   (unless (= oi i)
 	     (delete-region
 	      (point)
@@ -816,48 +859,121 @@ Currently, \";\" and \"}\" are defined as electric keys."
 
 (defconst mythryl-mode-font-lock-keywords
   (list
-   ;; (list "\\(\\<incl\\>[ \t]+\\)" (list 1 font-lock-builtin-face))
-   (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
-   (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
+   (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\(::" mythryl-word-regexp "\\)*" "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
+   (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(\\([a-z][a-z'_0-9]*::\\)*" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
    (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
+   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
+   (list "\\([#.][1-9][0-9]*\\|-[RWX]\\)" (list 0 font-lock-builtin-face))
    (list
     (eval-when-compile
-      (concat "\\(#[0-9]+\\>\\|-[RWX]\\|"
-             (regexp-opt
-              (list
-	       "print"
+      (regexp-opt
+       (list
+	"print"
+	
+   	;; From src/app/makelib/main/makelib-g.pkg
+	"exit" "in" "bash" "system" "round" "atoi" "atod" "basename" "dirname" "trim" "die"
+	
+	;; maybe reconsider: "join'" and "shuffle'"
+	"chomp" "chdir" "environ" "explode" "factors" "fields" "filter" "fscanf" "getcwd"
+	"getenv" "getpid" "getppid" "getuid" "geteuid" "getgid" "getegid" "getgroups"
+	"getlogin" "getpgrp" "setgid" "setpgid" "setsid" "setuid" "implode" "iseven"
+	"isodd" "isprime" "join" "join'" "lstat" "mkdir" "now" "product" "rename" "rmdir"
+	"shuffle" "shuffle'" "sleep" "sort" "sorted" "scanf" "sscanf" "stat" "strcat"
+	"strlen" "strsort" "struniqsort" "sum" "symlink" "time" "tolower" "toupper"
+	"tokens" "uniquesort" "unlink" "words"
+	
+	"arg0" "argv"
+	
+	"isfile" "isdir" "ispipe" "issymlink" "issocket" "ischardev" "isblockdev"
+	
+	"mayread" "maywrite" "mayexecute"
+	
+	"eval" "evali" "evalf" "evals" "evalli" "evallf" "evalls"
+	
+	;; * from src/lib/src/lib/thread-kit/src/core-thread-kit/
+	
+	;; TODO
+	
+	;; ** from src/lib/src/lib/thread-kit/src/core-thread-kit/thread.pkg
+	"make_thread" "reset" "notify_and_dispatch" "thread_done" "yield" ;; TODO: review
 
-   	       ;;; From src/app/makelib/main/makelib-g.pkg
-   	       "exit" "in" "bash" "system" "round" "atoi" "atod" "basename" "dirname" "trim" "die"
+	;; More obtained via 'mythryld -e "show_vals()" from Mythryl-6.1.0
+	"abs" "acos" "all_logging" "always_mailop" "am_logging"
+	"ancestors_of_logtree_node" "apply" "apply'" "arg0" "argv"
+	"asin" "at_all" "atan" "atan2" "atod" "atoi" "back__ticks"
+	"banner" "basename" "bash" "before"
+	"build_executable_heap_image" "can_read" "cat" "ceil" "chdir"
+	"chomp" "choose" "clone_readqueue" "close_input"
+	"close_output" "compare_thread" "compile" "compiler_logging"
+	"cos" "cosh" "deref" "die" "dirname" "disable" "do_mailop"
+	"dot__backticks" "dot__barets" "dot__brokets" "dot__hashets"
+	"dot__qquotes" "dot__quotes" "dot__slashets" "e" "empty"
+	"empty'" "enable" "enable_node" "end_of_stream" "environ"
+	"eval" "eval_kludge_ref_float" "eval_kludge_ref_int"
+	"eval_kludge_ref_list_float" "eval_kludge_ref_list_int"
+	"eval_kludge_ref_list_string" "eval_kludge_ref_string" "evalf"
+	"evali" "evallf" "evalli" "evalls" "evals" "exception_message"
+	"exception_name" "exists" "exit" "exp" "explode" "explode"
+	"factors" "fields" "fill" "filter" "find_logtree_node_by_name"
+	"floor" "flush" "fold_left" "fold_right" "foreach"
+	"forget_all_mailslots_mailqueues_and_imps" "forget_imp"
+	"forget_mailqueue" "forget_mailslot"
+	"forget_startup_or_shutdown_action" "freeze" "freeze'"
+	"from_int" "from_lines" "fscanf" "get" "get'"
+	"get_current_thread" "get_current_thread's_id"
+	"get_current_thread's_name" "get_instream"
+	"get_makelib_preprocessor_symbol_value" "get_output_position"
+	"get_outstream" "getcwd" "getegid" "getenv" "geteuid" "getgid"
+	"getgroups" "getlogin" "getpgrp" "getpid" "getppid" "getuid"
+	"give" "give'" "guard" "hash_thread" "head" "help" "identity"
+	"ignore" "implode" "implode" "in" "isblockdev" "ischardev"
+	"isdir" "iseven" "isfile" "isodd" "ispipe" "isprime"
+	"issocket" "issymlink" "join" "join'" "length" "lines" "ln"
+	"load_plugin" "log" "log10" "log_if" "logger_cleanup"
+	"logger_is_set_to" "logprint" "lookahead" "lstat" "make"
+	"make_boolean_per_thread_property" "make_empty_maildrop"
+	"make_full_maildrop" "make_instream" "make_logtree_leaf"
+	"make_mailcaster" "make_mailqueue" "make_mailslot"
+	"make_oneshot_maildrop" "make_outstream"
+	"make_per_thread_property" "make_readqueue" "make_thread"
+	"make_thread'" "map" "map'" "max" "mayexecute" "mayread"
+	"maywrite" "min" "mkdir" "name_of_logtree_node" "never"
+	"nonblocking_empty" "nonblocking_get" "nonblocking_give"
+	"nonblocking_peek" "nonblocking_pull" "nonblocking_take" "not"
+	"not_null" "note_imp" "note_mailqueue" "note_mailslot"
+	"note_startup_or_shutdown_action" "now" "null" "o"
+	"open_for_append" "open_for_read" "open_for_write"
+	"open_string" "parent_of_logtree_node" "peek" "peek'" "pi"
+	"pow" "print" "print" "print_logtree" "product" "pull" "pull'"
+	"push" "read" "read_all" "read_line" "read_lines" "read_n"
+	"read_one" "real" "receive" "receive'" "redump_heap" "rename"
+	"reverse" "rmdir" "round" "round" "run" "same_maildrop"
+	"same_mailqueue" "same_mailslot" "same_oneshot_maildrop"
+	"same_thread" "say" "scan_stream" "scanf" "select" "set"
+	"set_control" "set_instream" "set_logger_to"
+	"set_output_position" "set_outstream" "setgid" "setpgid"
+	"setsid" "setuid" "show_all" "show_api" "show_apis"
+	"show_control" "show_controls" "show_generics" "show_pkg"
+	"show_pkgs" "show_types" "show_vals" "shuffle" "shuffle'"
+	"shut_down_thread_scheduler" "sin" "sinh" "size" "sleep"
+	"sleep_for" "sleep_until" "sort" "sorted" "sources"
+	"spawn_to_disk" "sqrt" "sscanf" "standardlib_logging"
+	"start_up_thread_scheduler" "start_up_thread_scheduler'"
+	"stat" "stderr" "stdin" "stdout" "str" "strcat" "strlen"
+	"strsort" "struniqsort" "substring"
+	"subtree_nodes_and_log_flags" "sum" "swap" "swap'" "symlink"
+	"system" "tail" "take" "take'" "tan" "tanh" "the" "the_else"
+	"thread_death_mailop" "thread_done" "thread_scheduler"
+	"thread_scheduler_is_running" "thread_to_name"
+	"thread_to_string" "time" "timeout_at'" "timeout_in'" "to_int"
+	"tokens" "tolower" "toupper" "transmit" "trim" "trunc"
+	"uniquesort" "unlink" "vector" "version" "with_nack" "words"
+	"wrap" "wrap_handler" "write" "write_one" "write_substring"
+	"yield"
 
-	       ;; maybe reconsider: "join'" and "shuffle'"
-   	       "chomp" "chdir" "environ" "explode" "factors" "fields" "filter" "fscanf" "getcwd"
-   	       "getenv" "getpid" "getppid" "getuid" "geteuid" "getgid" "getegid" "getgroups"
-   	       "getlogin" "getpgrp" "setgid" "setpgid" "setsid" "setuid" "implode" "iseven"
-   	       "isodd" "isprime" "join" "join'" "lstat" "mkdir" "now" "product" "rename" "rmdir"
-   	       "shuffle" "shuffle'" "sleep" "sort" "sorted" "scanf" "sscanf" "stat" "strcat"
-   	       "strlen" "strsort" "struniqsort" "sum" "symlink" "time" "tolower" "toupper"
-   	       "tokens" "uniquesort" "unlink" "words"
-
-   	       "arg0" "argv"
-
-               "isfile" "isdir" "ispipe" "issymlink" "issocket" "ischardev" "isblockdev"
-
-   	       "mayread" "maywrite" "mayexecute"
-
-   	       "eval" "evali" "evalf" "evals" "evalli" "evallf" "evalls"
-
-   	       ;; * from src/lib/src/lib/thread-kit/src/core-thread-kit/
-
-   	       ;; TODO
-
-   	       ;; ** from src/lib/src/lib/thread-kit/src/core-thread-kit/thread.pkg
-   	       "make_thread" "reset" "notify_and_dispatch" "thread_done" "yield" ;; TODO: review
-	       
-   	       ) 'words)
-             "\\)"))
+	) 'words))
     (list 1 font-lock-builtin-face))
-   (list "^#DO\\>" 0 (list font-lock-preprocessor-face))
+   (list "^#DO\\>" (list 0 font-lock-preprocessor-face))
    (list
     (eval-when-compile
       (regexp-opt
@@ -869,17 +985,13 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	     "my" "nonfix" "op" "or" "overload" "package" "printf"
 	     "raise" "rec" "sharing" "sprintf" "stipulate" "type"
 	     "val" "where" "with" "withtype") 'words))
-    (list 1 font-lock-keyword-face))
+    (list 0 font-lock-keyword-face))
    (list mythryl-character-constant-regexp  (list 0 font-lock-string-face))
-   (list (car mythryl-perl-match-regexps) (list 0 font-lock-string-face))
-   (list (cadr mythryl-perl-match-regexps) (list 0 font-lock-string-face))
-   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
+   (list mythryl-perlish-regexp (list 0 font-lock-string-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
-   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>("
-	 (list 0 font-lock-function-name-face))
-   (list "\\(\\<[a-z][a-zA-Z'_0-9]*\\|[ \t]+[.#][a-z][a-zA-Z'_0-9]*\\)\\>"
-	 (list 0 font-lock-variable-name-face))
-   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]\\)?\\>"
+   (list "\\(\\([.#]\\|\\<\\)[a-z][a-zA-Z'_0-9]*\\)(" (list 1 font-lock-function-name-face))
+   (list "\\([.#]\\|\\<\\)[a-z][a-zA-Z'_0-9]*" (list 0 font-lock-variable-name-face))
+   (list "\\<[A-Z]\\(_[A-Za-z'_0-9]+\\)?\\>"
 	 (list 0 mythryl-mode-type-variable-face))
    (list "\\<[A-Z][A-Za-z'_0-9]*[a-z][A-Za-z'_0-9]*\\>"
 	 (list 0 font-lock-type-face))
@@ -1131,11 +1243,14 @@ See also: `mythryl-mode-turn-on-outline'."
 
     (set (make-local-variable 'font-lock-comment-end-skip) comment-end-skip)
     (set (make-local-variable 'font-lock-syntactic-keywords)
-    	 (list
-    	  (list "#[^#! \t\n]" 0 "w")
-    	  (list (car mythryl-perl-match-regexps)  '(1 (7 . ?/)) '(3 (7 . ?/)))
-    	  (list (cadr mythryl-perl-match-regexps) '(1 (7 . ?|)) '(3 (7 . ?|)))
-    	  (list mythryl-character-constant-regexp '(1 (7 . ?')) '(3 (7 . ?')))))))
+	 (list
+	  (list "\\.\\(/\\)[^/]*\\(//[^/]*\\)*\\(/\\)" '(1 (7 . nil)) '(3 (7 . nil)))
+	  (list "\\.\\(|\\)[^|]*\\(||[^|]*\\)*\\(|\\)" '(1 (7 . nil)) '(3 (7 . nil)))
+	  (list "\\.\\(<\\)[^>]*\\(>>[^>]*\\)*\\(>\\)" '(1 (15)) '(3 (15)))
+	  (list "\\.\\(#\\)[^#]*\\(##[^#]*\\)*\\(#\\)" '(1 (7 . nil)) '(3 (7 . nil)))
+	  (list "\\(#\\)[^#! \t\n]" 1 "w")
+	  (list mythryl-character-constant-regexp '(1 (7 . ?')) '(3 (7 . ?')))
+	  ))))
 
 ;;; Mythryl interaction mode
 
