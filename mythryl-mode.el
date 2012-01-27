@@ -1122,8 +1122,8 @@ Currently, \";\" and \"}\" are defined as electric keys."
        ("FALSE" "⊥")
        ("include" "𝚫") ;; Δ
        ("package" "⊞") ;; ⬛ ⊞ ⌗
-       ("case" "⋲") ;; ⁅‣  ⋲⟤ ⋲ ‣
-       ("esac" "⋺") ;; ⋺ ⁆
+       ("case" "◆") ;; ⁅‣  ⋲⟤ ⋲ ‣ ⋲")
+       ("esac" "◇") ;; ⋺ ⁆
        ("api" "▣") ;; ▣ ⬜
        ;; ("generic" "") ;; some langueges use diamond for a 
        ("if" "❰̵") ;; ◆ ⬙(
