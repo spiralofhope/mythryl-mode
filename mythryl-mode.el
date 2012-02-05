@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.44
+;; Version: 2.5.45
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -856,7 +856,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
   (list
    (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\(::" mythryl-word-regexp "\\)*" "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
    (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(\\([a-z][a-z'_0-9]*::\\)*" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
-   (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
+   (list (concat "\\<\\(fun\\)\\>[ \t]+\\([a-z][a-z0-9_']*\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
    (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    (list "\\([#.][1-9][0-9]*\\|-[RWX]\\)" (list 0 font-lock-builtin-face))
    (list
@@ -994,6 +994,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	 (list 0 mythryl-mode-underscore-face))
    (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>"
 	 (list 0 font-lock-constant-face))
+   (list "[+-]?[0-9][a-zA-Z0-9.]*" (list 0 font-lock-constant-face))
    (list mythryl-op-regexp
 	 (list 0 mythryl-mode-op-face))
    (list "[][(){};,.]+"
@@ -1115,7 +1116,7 @@ See also: `mythryl-mode-turn-on-outline'."
   (set (make-local-variable 'comment-use-syntax) t)
   ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?
   (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]\\|$\\)")
+  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\([\t ]\\|$\\)\\|/[*]+\\)")
   (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how it would help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
   (set (make-local-variable 'comment-end) "") ;; "*/")
 
