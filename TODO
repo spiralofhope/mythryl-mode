@@ -1,5 +1,10 @@
-Maybe create mythryl-extras.el.
+Add NEWS file.
+
+Maybe create a mythryl-extra.el.
 
 Update mythryl-mode.el in EmacsWiki.
 
-Add NEWS file.
+Review highlighting of: my str_to_sym = (*table).str_to_sym;
+
+Add command to convert infix syntax to ordinary function call syntax:
+   (a < b) -> (<)(a, b)
