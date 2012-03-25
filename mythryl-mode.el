@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.43
+;; Version: 2.5.45
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -856,7 +856,8 @@ Currently, \";\" and \"}\" are defined as electric keys."
   (list
    (list (concat "\\(\\<package\\>\\)[ \t]+\\(" mythryl-word-regexp "\\)[ \t]+=[ \t]+\\(" mythryl-word-regexp "\\(::" mythryl-word-regexp "\\)*" "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face) (list 3 mythryl-mode-pkg-face))
    (list (concat "\\<\\(include\\|package\\)\\>[ \t]+\\(\\([a-z][a-z'_0-9]*::\\)*" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 mythryl-mode-pkg-face))
-   (list (concat "\\<\\(fun\\)\\>[ \t]+\\(" mythryl-word-regexp "\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
+   (list (concat "\\<\\(fun\\)\\>[ \t]+\\([a-z][a-z0-9_']*\\)") (list 1 font-lock-keyword-face) (list 2 font-lock-function-name-face))
+   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    (list "\\([#.][1-9][0-9]*\\|-[RWX]\\)" (list 0 font-lock-builtin-face))
    (list
     (eval-when-compile
@@ -890,7 +891,81 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	
 	;; ** from src/lib/src/lib/thread-kit/src/core-thread-kit/thread.pkg
 	"make_thread" "reset" "notify_and_dispatch" "thread_done" "yield" ;; TODO: review
-	
+
+	;; More obtained via 'mythryld -e "show_vals()" from Mythryl-6.1.0
+	"abs" "acos" "all_logging" "always_mailop" "am_logging"
+	"ancestors_of_logtree_node" "apply" "apply'" "arg0" "argv"
+	"asin" "at_all" "atan" "atan2" "atod" "atoi" "back__ticks"
+	"banner" "basename" "bash" "before"
+	"build_executable_heap_image" "can_read" "cat" "ceil" "chdir"
+	"chomp" "choose" "clone_readqueue" "close_input"
+	"close_output" "compare_thread" "compile" "compiler_logging"
+	"cos" "cosh" "deref" "die" "dirname" "disable" "do_mailop"
+	"dot__backticks" "dot__barets" "dot__brokets" "dot__hashets"
+	"dot__qquotes" "dot__quotes" "dot__slashets" "e" "empty"
+	"empty'" "enable" "enable_node" "end_of_stream" "environ"
+	"eval" "eval_kludge_ref_float" "eval_kludge_ref_int"
+	"eval_kludge_ref_list_float" "eval_kludge_ref_list_int"
+	"eval_kludge_ref_list_string" "eval_kludge_ref_string" "evalf"
+	"evali" "evallf" "evalli" "evalls" "evals" "exception_message"
+	"exception_name" "exists" "exit" "exp" "explode" "explode"
+	"factors" "fields" "fill" "filter" "find_logtree_node_by_name"
+	"floor" "flush" "fold_left" "fold_right" "foreach"
+	"forget_all_mailslots_mailqueues_and_imps" "forget_imp"
+	"forget_mailqueue" "forget_mailslot"
+	"forget_startup_or_shutdown_action" "freeze" "freeze'"
+	"from_int" "from_lines" "fscanf" "get" "get'"
+	"get_current_thread" "get_current_thread's_id"
+	"get_current_thread's_name" "get_instream"
+	"get_makelib_preprocessor_symbol_value" "get_output_position"
+	"get_outstream" "getcwd" "getegid" "getenv" "geteuid" "getgid"
+	"getgroups" "getlogin" "getpgrp" "getpid" "getppid" "getuid"
+	"give" "give'" "guard" "hash_thread" "head" "help" "identity"
+	"ignore" "implode" "implode" "in" "isblockdev" "ischardev"
+	"isdir" "iseven" "isfile" "isodd" "ispipe" "isprime"
+	"issocket" "issymlink" "join" "join'" "length" "lines" "ln"
+	"load_plugin" "log" "log10" "log_if" "logger_cleanup"
+	"logger_is_set_to" "logprint" "lookahead" "lstat" "make"
+	"make_boolean_per_thread_property" "make_empty_maildrop"
+	"make_full_maildrop" "make_instream" "make_logtree_leaf"
+	"make_mailcaster" "make_mailqueue" "make_mailslot"
+	"make_oneshot_maildrop" "make_outstream"
+	"make_per_thread_property" "make_readqueue" "make_thread"
+	"make_thread'" "map" "map'" "max" "mayexecute" "mayread"
+	"maywrite" "min" "mkdir" "name_of_logtree_node" "never"
+	"nonblocking_empty" "nonblocking_get" "nonblocking_give"
+	"nonblocking_peek" "nonblocking_pull" "nonblocking_take" "not"
+	"not_null" "note_imp" "note_mailqueue" "note_mailslot"
+	"note_startup_or_shutdown_action" "now" "null" "o"
+	"open_for_append" "open_for_read" "open_for_write"
+	"open_string" "parent_of_logtree_node" "peek" "peek'" "pi"
+	"pow" "print" "print" "print_logtree" "product" "pull" "pull'"
+	"push" "read" "read_all" "read_line" "read_lines" "read_n"
+	"read_one" "real" "receive" "receive'" "redump_heap" "rename"
+	"reverse" "rmdir" "round" "round" "run" "same_maildrop"
+	"same_mailqueue" "same_mailslot" "same_oneshot_maildrop"
+	"same_thread" "say" "scan_stream" "scanf" "select" "set"
+	"set_control" "set_instream" "set_logger_to"
+	"set_output_position" "set_outstream" "setgid" "setpgid"
+	"setsid" "setuid" "show_all" "show_api" "show_apis"
+	"show_control" "show_controls" "show_generics" "show_pkg"
+	"show_pkgs" "show_types" "show_vals" "shuffle" "shuffle'"
+	"shut_down_thread_scheduler" "sin" "sinh" "size" "sleep"
+	"sleep_for" "sleep_until" "sort" "sorted" "sources"
+	"spawn_to_disk" "sqrt" "sscanf" "standardlib_logging"
+	"start_up_thread_scheduler" "start_up_thread_scheduler'"
+	"stat" "stderr" "stdin" "stdout" "str" "strcat" "strlen"
+	"strsort" "struniqsort" "substring"
+	"subtree_nodes_and_log_flags" "sum" "swap" "swap'" "symlink"
+	"system" "tail" "take" "take'" "tan" "tanh" "the" "the_else"
+	"thread_death_mailop" "thread_done" "thread_scheduler"
+	"thread_scheduler_is_running" "thread_to_name"
+	"thread_to_string" "time" "timeout_at'" "timeout_in'" "to_int"
+	"tokens" "tolower" "toupper" "transmit" "trim" "trunc"
+	"uniquesort" "unlink" "vector" "version" "with_nack" "words"
+	"wrap" "wrap_handler" "write" "write_one" "write_substring"
+	"yield"
+
 	) 'words))
     (list 1 font-lock-builtin-face))
    (list "^#DO\\>" (list 0 font-lock-preprocessor-face))
@@ -908,7 +983,6 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (list 0 font-lock-keyword-face))
    (list mythryl-character-constant-regexp  (list 0 font-lock-string-face))
    (list mythryl-perlish-regexp (list 0 font-lock-string-face))
-   (list "\\(\\<[a-z][a-z'_0-9]*::+\\)" (list 1 mythryl-mode-pkg-face))
    ;; (list "\\((\\)\\([\\!%&$+/:<=>?@~|*^-]+\\)\\()\\)" 1 font-lock-variable-name-face 2 mythryl-mode-op-face 3 font-lock-variable-name-face) ;; Haskell style operator references
    (list "\\(\\([.#]\\|\\<\\)[a-z][a-zA-Z'_0-9]*\\)(" (list 1 font-lock-function-name-face))
    (list "\\([.#]\\|\\<\\)[a-z][a-zA-Z'_0-9]*" (list 0 font-lock-variable-name-face))
@@ -920,6 +994,7 @@ Currently, \";\" and \"}\" are defined as electric keys."
 	 (list 0 mythryl-mode-underscore-face))
    (list "\\<\\(_\\|[A-Z][A-Z'_0-9]*[A-Z][A-Z'_0-9]*\\)\\>"
 	 (list 0 font-lock-constant-face))
+   (list "[+-]?[0-9][a-zA-Z0-9.]*" (list 0 font-lock-constant-face))
    (list mythryl-op-regexp
 	 (list 0 mythryl-mode-op-face))
    (list "[][(){};,.]+"
@@ -1041,7 +1116,7 @@ See also: `mythryl-mode-turn-on-outline'."
   (set (make-local-variable 'comment-use-syntax) t)
   ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?
   (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\|/[*]+\\)\\([\t ]\\|$\\)")
+  (set (make-local-variable 'comment-start-skip) "\\(#[#!]*\\([\t ]\\|$\\)\\|/[*]+\\)")
   (set (make-local-variable 'comment-end-skip) "[\t ]*[*]+/") ;; Not sure how to use this variable yet or how it would help, font-lock-comment-end-skip is actually used by font-lock+.el.  --Rev22
   (set (make-local-variable 'comment-end) "") ;; "*/")
 
