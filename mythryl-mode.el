@@ -3,7 +3,7 @@
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
 ;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.45
+;; Version: 2.5.46
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -1086,16 +1086,14 @@ Currently, \";\" and \"}\" are defined as electric keys."
     (looking-at "[ \t{]*")
     (string-width (match-string 0))))
 
-(defcustom mythryl-mode-turn-on-outline t
+(defcustom mythryl-mode-turn-on-outline nil
   "Automatically turn `outline-minor-mode' on."
   :type 'boolean :group 'mythryl)
 
 ;;;###autoload
 (define-derived-mode mythryl-mode fundamental-mode
   "Mythryl"
-  "Major mode for the Mythryl programming language.
-
-See also: `mythryl-mode-turn-on-outline'."
+  "Major mode for the Mythryl programming language."
   :group 'mythryl
   :abbrev-table mythryl-mode-abbrev-table
   :syntax-table mythryl-mode-syntax-table
@@ -1111,7 +1109,7 @@ See also: `mythryl-mode-turn-on-outline'."
   (set (make-local-variable 'outline-level) (function mythryl-mode-outline-level))
   (when mythryl-mode-turn-on-outline
     (when (functionp 'outline-minor-mode)
-      (outline-minor-mode t)))
+      (outline-minor-mode 1)))
 
   (set (make-local-variable 'comment-use-syntax) t)
   ;; (set (make-local-variable 'comment-style) 'plain) ;; Would setting this up help?
