@@ -1,3 +1,9 @@
+mythryl-mode (2.5.46.deb32) lucid; urgency=low
+
+  * Version 2.5.46: do not turn on outline-minor-mode, by default.
+
+ -- Michele Bini <michele.bini@gmail.com>  Wed, 28 Mar 2012 01:20:25 +0200
+
 mythryl-mode (2.5.45.deb31) lucid; urgency=low
 
   * Version 2.5.45; highlight number constants, highlighting improvements.

@@ -6,5 +6,8 @@ Update mythryl-mode.el in EmacsWiki.
 
 Review highlighting of: my str_to_sym = (*table).str_to_sym;
 
-Add command to convert infix syntax to ordinary function call syntax:
-   (a < b) -> (<)(a, b)
+Add command to convert infix syntax to/from ordinary function call syntax:
+   (a < b) <-> (<)(a, b)
+
+Add command to hide/show various code elements like type annotations
+or abbreviated "abc::" package names.

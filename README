@@ -2,7 +2,7 @@ This directory contains mythryl-mode, an Emacs major mode for the Mythryl
 programming language.
 
 Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-Copyright (C) 2010, 2011 Michele Bini <michele.bini@gmail.com>
+Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com>
 
 Current maintainer: Michele Bini <michele.bini@gmail.com>
 
@@ -62,7 +62,7 @@ Repositories
 
 You can find versions of mythryl-mode at the following locations:
 
-http://github.com/rev22/mythryl-mode
+https://github.com/rev22/mythryl-mode
 
 EmacsWiki: http://www.emacswiki.org/emacs/MythrylMode
 
