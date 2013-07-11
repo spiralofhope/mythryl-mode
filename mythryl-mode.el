@@ -1,9 +1,9 @@
 ;;; mythryl-mode.el --- Major mode and support code for Mythryl
  
 ;; Copyright (C) 2009 Phil Rand <philrand@gmail.com>
-;; Copyright (C) 2010, 2011, 2012 Michele Bini <michele.bini@gmail.com> aka Rev22
+;; Copyright (C) 2010, 2011, 2012, 2013 Michele Bini <michele.bini@gmail.com> aka Rev22
 
-;; Version: 2.5.46
+;; Version: 2.5.47
 ;; Maintainer: Michele Bini <michele.bini@gmail.com>
 
 ;; mythryl.el is not part of Emacs
@@ -183,7 +183,7 @@ This is a bold character by default."
 	  "\\)"))
 
 (defvar mythryl-character-constant-regexp
-  "\\<\\('\\)\\(\\\\.\\|[^']\\)\\('\\)"
+  "\\('\\)\\(\\\\.\\|[^']\\)\\('\\)"
   "Regexp matching character constants.")
 
 (defvar mythryl-perlish-regexp
