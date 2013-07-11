@@ -1,3 +1,9 @@
+mythryl-mode (2.5.47.deb33) unstable; urgency=low
+
+  * Version 2.5.47; fix an indentation glitch after '('.
+
+ -- Michele Bini <michele.bini@gmail.com>  Thu, 11 Jul 2013 05:58:00 +0200
+
 mythryl-mode (2.5.46.deb32) lucid; urgency=low
 
   * Version 2.5.46: do not turn on outline-minor-mode, by default.

@@ -11,3 +11,5 @@ Add command to convert infix syntax to/from ordinary function call syntax:
 
 Add command to hide/show various code elements like type annotations
 or abbreviated "abc::" package names.
+
+Add command to rename an identifier.
